@@ -1,54 +1,56 @@
-# Secure Messaging Platform (Signal Clone)
+# Signal Clone — Secure Messaging Platform
 
-A pixel-perfect, production-grade clone of the **Signal Private Messenger** application built with a modern fullstack architecture (**Next.js 14 + TypeScript** and **Python FastAPI + SQLite + WebSockets**).
+A pixel-perfect, production-grade clone of the **Signal Private Messenger** application built with a modern fullstack architecture (**Next.js 14 + TypeScript** frontend and **Python FastAPI + SQLite + WebSockets** backend).
 
 ---
 
 ## 🌟 Key Features
 
 ### 1. Authentication & Onboarding
-- **Phone / Username Registration & Login**: Onboard with phone number (e.g. `+1 555 0103`) or `@username`.
-- **Mock OTP Flow**: Fixed code verification (`123456`) with a 1-click auto-fill helper.
-- **Profile Customization**: Set display name, bio, and choose from Signal preset avatars.
-- **Session Persistence**: JWT-based session storage in `localStorage`.
-- **Fast Demo Account Switcher**: Switch instantly between pre-seeded test accounts (**Alice Smith**, **Bob Johnson**, **Moxie Marlinspike**, **Edward Snowden**, **Signal Support**) to test real-time messaging across two browser tabs.
+- **Phone / Username Registration & Login**: Onboard with phone number or `@username`.
+- **Mock OTP Flow**: Fixed code verification (`123456`) with 1-click auto-fill.
+- **Profile Customization**: Set display name, bio, and avatar photo.
+- **Session Persistence**: JWT-based session stored in `localStorage`.
+- **Fast Demo Account Switcher**: Instantly switch between **Alice Smith**, **Bob Johnson**, **Moxie Marlinspike**, **Edward Snowden**, **Signal Support** to test real-time messaging across two browser tabs.
 
 ### 2. Real-Time One-on-One Messaging
-- **Instant Two-Way Messaging**: Real-time communication via WebSockets without page refreshes.
-- **Signal Receipts System**:
-  - `✓` Single check: Sent
-  - `✓✓` Double check: Delivered to recipient's active session
-  - `✓✓` **Double blue check**: Read by recipient
-- **Typing Indicators**: Real-time 3-dot bouncing animation in chat bubbles and `"Alice is typing..."` subtitle in the conversation list.
-- **Message Timestamps & Date Dividers**: Automatically grouped by `"Today"`, `"Yesterday"`, or formatted calendar dates.
-- **Persistence**: All conversations, messages, and statuses are persisted in SQLite.
+- **Instant Two-Way Messaging**: WebSocket-powered real-time communication.
+- **Signal Receipts System**: `✓` Sent → `✓✓` Delivered → `✓✓` Blue = Read.
+- **Typing Indicators**: Live `"Alice is typing..."` animation in chat and sidebar.
+- **Message Timestamps & Date Dividers**: Grouped by `"Today"`, `"Yesterday"`, or calendar date.
+- **Persistence**: All conversations, messages, and statuses persisted in SQLite.
 
 ### 3. Group Messaging
-- **Create Groups**: Name groups, generate avatars, and select initial members.
-- **Group Member Management**:
-  - View member list with **Admin** badges (`Crown` indicator).
-  - Admins can add or remove members.
-  - Members can leave the group at any time.
-- **System Notifications**: Centered pill notifications for group creation, member additions, removals, and settings changes.
+- **Create Groups**: Name, avatar, select members.
+- **Group Member Management**: Admin badges, add/remove members, leave group.
+- **System Notifications**: Pill-style notifications for group events.
 
-### 4. Signal Experience & Aesthetics
-- **Signal Desktop Design**: Authentic charcoal dark theme (`#121214` background, `#1a1a1e` sidebar, `#2c6bed` outgoing bubble, `#2b2b32` incoming bubble).
-- **Light Mode Support**: Seamless toggle between dark and light themes in Settings.
-- **Responsive Layout**: Adapts gracefully across mobile, tablet, and desktop viewports.
-- **Web Audio Sound Synthesis**: Built-in Signal incoming chime, outgoing message pop, and phone call ringtone using the browser's Web Audio API (zero external assets needed).
+### 4. Rich Messaging Features
+- **📎 Attachments**: Photos, videos, and file uploads with inline image lightbox and downloadable document cards.
+- **😊 Emoji / Sticker / GIF Picker**: Full emoji grid with 8 categories, search, skin tone selector, stickers and GIFs tabs.
+- **🎙️ Voice Notes**: Real browser `MediaRecorder` recording with live waveform, discard/send controls, and in-chat audio player with scrubber and speed toggle (1×/1.5×/2×).
+- **📊 Polls**: Create polls with multiple options, allow-multiple toggle, real-time voting via reactions.
+- **💬 Quoted Replies**: Reply to any message with an embedded quote preview.
+- **❤️ Message Reactions**: Floating emoji bar with real-time reaction counters on bubbles.
+- **⏱️ Disappearing Messages**: Per-chat timers (Off / 30s / 5m / 1h / 1d / 1w / 4w).
+- **⌨️ Keyboard Shortcuts**: `Cmd+K` / `Ctrl+K` search, `Enter` send, `Shift+Enter` newline, `Esc` close modals.
 
-### 5. Bonus Features
-- **Attachments (Images & Files)**: Multipart upload with inline image lightbox viewer and downloadable document cards.
-- **Message Reactions**: Floating emoji reaction bar (`👍`, `❤️`, `😂`, `😮`, `😢`, `👏`, `🔥`) with real-time reaction counters docked on bubbles.
-- **Quoted Replies**: Click reply on any message to pin a quote banner and render an embedded quoted snippet inside the message bubble.
-- **Functional Disappearing Messages**: Configure timers (`Off`, `10s`, `1m`, `1h`, `1d`, `1w`). Messages automatically expire and purge after their duration.
-- **Keyboard Shortcuts**: `Cmd+K` / `Ctrl+K` to search chats, `Enter` to send, `Shift+Enter` for newlines, `Esc` to close modals.
+### 5. Signal-Authentic UI & Theme
+- **Pixel-perfect Signal Desktop design**: Near-black `#111113` background, visible `#1e1e22` settings cards, `#2c6bed` outgoing bubbles.
+- **Fully functional Settings panels**: General (Phone, Device, Permissions, Updates), Appearance (Language, Theme, Chat colour, Zoom), Chats (text input, folders, export), Calls (devices, relay), Notifications, Privacy, Data usage, Backups, Donate.
+- **Official Signal favicon** (ICO + SVG + PNG).
+- **Note to Self**: Styled welcome card with official chat badge.
 
-### 6. Mocked / Placeholder Sections
-- **Voice & Video Calls**: Calling screen with ringtone audio synthesis, call duration counter, mute mic, video toggle, and hang up.
-- **Simulated End-to-End Encryption**: 60-digit safety number grid (12 blocks of 5 digits) + simulated QR code verification.
-- **Stories**: Ephemeral 24h stories placeholder modal.
-- **Linked Devices**: Multi-device management and QR code link view.
+### 6. Responsive Design
+- 📱 **Mobile**: Single-panel view — chat list fills full screen, tap to open chat, **← back button** to return. Bottom tab bar replaces the side rail.
+- 💻 **Tablet** (768px+): Sidebar + chat panel, activity rail hidden.
+- 🖥️ **Desktop** (1024px+): Full 3-column Signal layout (activity rail + sidebar + chat canvas).
+
+### 7. Mocked / Simulated Sections
+- **Voice & Video Calls**: Call screen with ringtone synthesis, duration counter, mute, video toggle, hang up.
+- **End-to-End Encryption**: 60-digit safety number grid + simulated QR verification.
+- **Stories**: Ephemeral 24h story creator placeholder.
+- **Linked Devices**: Multi-device management and QR link view.
 
 ---
 
