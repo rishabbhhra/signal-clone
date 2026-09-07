@@ -130,6 +130,38 @@ This launches:
 
 ---
 
+## ☁️ Cloud Deployment (Vercel + Railway)
+
+The frontend deploys on **Vercel** and the backend on **Railway** (free tier, no credit card needed).
+
+### Step 1 — Deploy Backend to Railway
+
+1. Go to [railway.app](https://railway.app) → sign up with GitHub.
+2. Click **New Project → Deploy from GitHub repo** → select `signal-clone`.
+3. Set **Root Directory** to `backend`.
+4. Railway auto-detects Python via `nixpacks.toml`. Start command is pre-configured in `railway.json`.
+5. *(Optional)* Add a **Volume** mounted at `/app/uploads` to persist uploaded files across deploys.
+6. After deploy, copy your Railway public URL, e.g.:
+   ```
+   https://signal-clone-production-xxxx.up.railway.app
+   ```
+
+### Step 2 — Deploy Frontend to Vercel
+
+1. Go to [vercel.com](https://vercel.com) → sign up with GitHub.
+2. Click **Add New Project** → import the `signal-clone` repo.
+3. Set **Root Directory** to `frontend`.
+4. Add these **Environment Variables** (replace with your Railway URL from Step 1):
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://your-backend.up.railway.app` |
+| `NEXT_PUBLIC_WS_URL` | `wss://your-backend.up.railway.app/ws` |
+
+5. Click **Deploy**. Vercel builds and publishes automatically on every git push.
+
+---
+
 ### Manual Setup
 
 #### 1. Backend Setup

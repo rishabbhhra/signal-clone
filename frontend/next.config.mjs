@@ -9,6 +9,10 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "*.up.railway.app",
+      },
+      {
+        protocol: "https",
         hostname: "api.dicebear.com",
       },
       {
@@ -18,14 +22,17 @@ const nextConfig = {
     ],
   },
   async rewrites() {
+    // In production, NEXT_PUBLIC_API_URL is set to the Railway backend URL.
+    // Rewrites are only used in local development (when env var is not set).
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     return [
       {
         source: "/api/:path*",
-        destination: "http://127.0.0.1:8000/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
       },
       {
         source: "/uploads/:path*",
-        destination: "http://127.0.0.1:8000/uploads/:path*",
+        destination: `${backendUrl}/uploads/:path*`,
       },
     ];
   },
