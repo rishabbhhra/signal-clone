@@ -130,20 +130,39 @@ This launches:
 
 ---
 
-## ☁️ Cloud Deployment (Vercel + Railway)
+## ☁️ Live Deployment
 
-The frontend deploys on **Vercel** and the backend on **Railway** (free tier, no credit card needed).
+| | URL |
+|---|---|
+| 🌐 **Frontend** | [signal-clone-eosin-phi.vercel.app](https://signal-clone-eosin-phi.vercel.app) |
+| ⚙️ **Backend API** | [signal-clone-backend-p0az.onrender.com](https://signal-clone-backend-p0az.onrender.com) |
+| 📖 **API Docs** | [signal-clone-backend-p0az.onrender.com/docs](https://signal-clone-backend-p0az.onrender.com/docs) |
 
-### Step 1 — Deploy Backend to Railway
+> **Note**: The backend runs on Render's free tier and may take ~30 seconds to wake up after inactivity. This is expected behaviour on the free plan.
 
-1. Go to [railway.app](https://railway.app) → sign up with GitHub.
-2. Click **New Project → Deploy from GitHub repo** → select `signal-clone`.
-3. Set **Root Directory** to `backend`.
-4. Railway auto-detects Python via `nixpacks.toml`. Start command is pre-configured in `railway.json`.
-5. *(Optional)* Add a **Volume** mounted at `/app/uploads` to persist uploaded files across deploys.
-6. After deploy, copy your Railway public URL, e.g.:
+---
+
+## ☁️ Cloud Deployment (Vercel + Render)
+
+The frontend is deployed on **Vercel** and the backend on **Render.com** (free tier, no credit card needed).
+
+### Step 1 — Deploy Backend to Render
+
+1. Go to [render.com](https://render.com) → sign up with GitHub.
+2. Click **New + → Web Service** → connect the `signal-clone` repo.
+3. Fill in the settings:
+
+| Field | Value |
+|---|---|
+| **Root Directory** | `backend` |
+| **Runtime** | `Python 3` |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| **Instance Type** | `Free` |
+
+4. Click **Create Web Service**. After deploy, copy your Render URL, e.g.:
    ```
-   https://signal-clone-production-xxxx.up.railway.app
+   https://signal-clone-backend-xxxx.onrender.com
    ```
 
 ### Step 2 — Deploy Frontend to Vercel
@@ -151,14 +170,14 @@ The frontend deploys on **Vercel** and the backend on **Railway** (free tier, no
 1. Go to [vercel.com](https://vercel.com) → sign up with GitHub.
 2. Click **Add New Project** → import the `signal-clone` repo.
 3. Set **Root Directory** to `frontend`.
-4. Add these **Environment Variables** (replace with your Railway URL from Step 1):
+4. Add these **Environment Variables** (using your Render URL from Step 1):
 
 | Variable | Value |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | `https://your-backend.up.railway.app` |
-| `NEXT_PUBLIC_WS_URL` | `wss://your-backend.up.railway.app/ws` |
+| `NEXT_PUBLIC_API_URL` | `https://your-backend.onrender.com` |
+| `NEXT_PUBLIC_WS_URL` | `wss://your-backend.onrender.com/ws` |
 
-5. Click **Deploy**. Vercel builds and publishes automatically on every git push.
+5. Click **Deploy**. Vercel rebuilds automatically on every `git push`.
 
 ---
 
