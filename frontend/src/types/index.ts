@@ -48,7 +48,7 @@ export interface Message {
   sender_id: string;
   sender: UserBrief;
   content: string;
-  message_type: "text" | "image" | "file" | "voice" | "system";
+  message_type: "text" | "image" | "file" | "voice" | "system" | "poll" | string;
   file_url?: string | null;
   file_name?: string | null;
   file_size?: number | null;

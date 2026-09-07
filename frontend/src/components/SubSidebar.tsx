@@ -142,7 +142,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
   }, [conversations, searchQuery]);
 
   return (
-    <div className="w-80 lg:w-[340px] h-full bg-[#1b1b1d] border-r border-[#26262a]/70 flex flex-col select-none flex-shrink-0 z-20">
+    <div className="w-80 lg:w-[340px] h-full bg-[#242426] border-r border-[#2c2c30] flex flex-col select-none flex-shrink-0 z-20">
       {/* 1. CHATS TAB - NEW CHAT VIEW (Screenshot 5: media_1788800001867.png) */}
       {activeRailTab === "chats" && isNewChatMode && (
         <>
@@ -618,28 +618,28 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
       {activeRailTab === "settings" && (
         <>
           {/* Header */}
-          <div className="h-14 px-4 flex items-center">
+          <div className="h-14 px-5 flex items-center">
             <h2 className="text-white font-bold text-lg tracking-tight">Settings</h2>
           </div>
 
-          {/* User Profile Card */}
-          <div className="px-3 pb-3">
+          {/* User Profile Card (Screenshot media_1788808797490.png) */}
+          <div className="px-3.5 pb-3">
             <div
               onClick={() => onSelectSettingsSection("profile")}
-              className={`p-3 rounded-2xl cursor-pointer transition-colors flex items-center gap-3.5 ${
+              className={`p-3 rounded-2xl cursor-pointer transition-all flex items-center gap-3.5 ${
                 activeSettingsSection === "profile"
-                  ? "bg-[#28282c] text-white"
-                  : "bg-[#222226] text-gray-200 hover:bg-[#28282c]"
+                  ? "bg-[#323236] text-white shadow-xs ring-1 ring-white/10"
+                  : "bg-[#2c2c30]/80 text-gray-200 hover:bg-[#323236]"
               }`}
             >
-              <div className="w-12 h-12 rounded-full bg-[#dcdfe4] text-[#1c1c20] flex items-center justify-center font-bold text-lg flex-shrink-0">
+              <div className="w-11 h-11 rounded-full bg-[#cfd2d8] text-[#1c1c20] flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-xs">
                 {currentUser?.display_name ? currentUser.display_name[0].toUpperCase() : "R"}
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-bold text-sm text-white truncate">
+                <h4 className="font-semibold text-sm text-white truncate">
                   {currentUser?.display_name || "Rishabh"}
                 </h4>
-                <p className="text-xs text-gray-400 font-mono truncate">
+                <p className="text-xs text-[#8e8e93] font-normal truncate mt-0.5">
                   {currentUser?.phone_number || "062041 65936"}
                 </p>
               </div>
@@ -647,7 +647,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
           </div>
 
           {/* Navigation Menu Items */}
-          <div className="flex-1 overflow-y-auto px-2 space-y-1 text-sm font-medium">
+          <div className="flex-1 overflow-y-auto px-2.5 space-y-0.5 text-sm font-normal">
             {[
               { id: "general", label: "General", icon: Settings },
               { id: "appearance", label: "Appearance", icon: Palette },
@@ -667,12 +667,12 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
                   onClick={() => onSelectSettingsSection(item.id as SettingsSection)}
                   className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl transition-colors text-left ${
                     isSelected
-                      ? "bg-[#28282c] text-white font-semibold"
-                      : "text-gray-300 hover:bg-[#222226] hover:text-white"
+                      ? "bg-[#2c2c30] text-white font-medium"
+                      : "text-gray-300 hover:bg-[#2c2c30]/60 hover:text-white"
                   }`}
                 >
-                  <Icon className="w-4.5 h-4.5 text-gray-400" />
-                  <span>{item.label}</span>
+                  <Icon className="w-4.5 h-4.5 text-gray-400 stroke-[1.8]" />
+                  <span className="text-sm">{item.label}</span>
                 </button>
               );
             })}

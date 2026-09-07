@@ -33,6 +33,7 @@ import {
   CheckCircle2,
   RotateCw,
   Camera,
+  AtSign,
 } from "lucide-react";
 import { SettingsSection } from "./SubSidebar";
 import { useSignal } from "@/context/SignalContext";
@@ -299,7 +300,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
   };
 
   return (
-    <div className="flex-1 h-full bg-[#121214] overflow-y-auto select-none relative">
+    <div className="flex-1 h-full bg-[#1e1e20] overflow-y-auto select-none relative">
       {/* Toast Feedback Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-8 z-50 bg-[#222228] text-white text-xs px-4 py-2.5 rounded-xl shadow-2xl border border-[#383842] flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
@@ -987,11 +988,11 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       )}
 
       {/* =========================================================================
-          VIEW 6: PROFILE
+          VIEW 6: PROFILE (Screenshot media_1788808797490.png)
       ========================================================================= */}
       {activeSection === "profile" && (
-        <div className="max-w-xl mx-auto w-full py-12 px-6 space-y-6 animate-in fade-in duration-150">
-          <h2 className="text-center text-white font-semibold text-base">Profile</h2>
+        <div className="max-w-md mx-auto w-full py-10 px-6 space-y-7 animate-in fade-in duration-150">
+          <h2 className="text-center text-white font-medium text-sm">Profile</h2>
 
           {/* Avatar & Photo Upload */}
           <div className="flex flex-col items-center">
@@ -1005,7 +1006,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
 
             <div
               onClick={() => avatarFileInputRef.current?.click()}
-              className="relative w-24 h-24 rounded-full bg-[#c9cdd4] text-[#1c1c20] flex items-center justify-center font-bold text-3xl mb-3 shadow-lg overflow-hidden cursor-pointer group"
+              className="relative w-20 h-20 rounded-full bg-[#c2c5cc] text-[#1c1c20] flex items-center justify-center font-bold text-3xl mb-2 shadow-xs overflow-hidden cursor-pointer group"
             >
               {currentUser?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -1017,86 +1018,72 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
               ) : (
                 <span>{currentUser?.display_name ? currentUser.display_name[0].toUpperCase() : "R"}</span>
               )}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                <Camera className="w-6 h-6" />
+              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                <Camera className="w-5 h-5" />
               </div>
             </div>
 
             <button
               onClick={() => avatarFileInputRef.current?.click()}
-              className="px-4 py-1.5 rounded-full bg-[#26262b] hover:bg-[#323238] text-xs font-semibold text-gray-200 transition-colors"
+              className="px-3.5 py-1 rounded-full bg-[#323236] hover:bg-[#3d3d42] text-xs font-normal text-gray-200 transition-colors"
             >
               Edit photo
             </button>
           </div>
 
-          {/* Profile Name & About Fields */}
+          {/* Profile Name, About & Username Rows (Matching Screenshot media_1788808797490.png) */}
           <div className="space-y-4 pt-2">
-            <div>
-              <label className="text-xs font-semibold text-zinc-400 block mb-1">Profile name</label>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-[#1e1e22] border border-[#27272c] rounded-xl text-white font-medium focus:outline-hidden focus:border-[#3a76f0] px-3.5 py-2 text-sm"
-                  placeholder="First name (required)"
-                />
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="bg-[#1e1e22] border border-[#27272c] rounded-xl text-white font-medium focus:outline-hidden focus:border-[#3a76f0] px-3.5 py-2 text-sm"
-                  placeholder="Last name (optional)"
-                />
-              </div>
+            {/* Row 1: Name */}
+            <div className="flex items-center gap-4 py-1 group">
+              <User className="w-5 h-5 text-gray-400 stroke-[1.8] flex-shrink-0" />
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                onBlur={handleSaveProfile}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveProfile(); }}
+                className="bg-transparent text-white font-normal text-sm focus:outline-hidden focus:bg-[#28282c] px-2 py-1 rounded-lg w-full transition-colors cursor-text"
+                placeholder="Rishabh"
+              />
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-zinc-400 block mb-1">About</label>
-              <div className="bg-[#1e1e22] border border-[#27272c] rounded-xl p-3">
-                <input
-                  type="text"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className="bg-transparent text-gray-300 focus:outline-hidden w-full text-sm"
-                  placeholder="Write a few words about yourself"
-                />
-              </div>
+            {/* Row 2: About */}
+            <div className="flex items-center gap-4 py-1 group">
+              <Edit2 className="w-5 h-5 text-gray-400 stroke-[1.8] flex-shrink-0" />
+              <input
+                type="text"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                onBlur={handleSaveProfile}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveProfile(); }}
+                className="bg-transparent text-white font-normal text-sm focus:outline-hidden focus:bg-[#28282c] px-2 py-1 rounded-lg w-full transition-colors cursor-text"
+                placeholder="About"
+              />
             </div>
 
-            <p className="text-xs text-zinc-500 px-1 leading-relaxed">
+            <p className="text-xs text-[#8e8e93] leading-relaxed pl-9">
               Your profile and changes to it will be visible to people you message, contacts and groups.
             </p>
 
-            {/* Save Button */}
-            <button
-              onClick={handleSaveProfile}
-              disabled={isSavingProfile}
-              className="w-full py-2.5 rounded-xl bg-signal-blue hover:bg-[#2257be] text-white font-semibold text-xs transition-colors shadow-sm disabled:opacity-50"
-            >
-              {isSavingProfile ? "Saving..." : "Save changes"}
-            </button>
+            <hr className="border-[#2c2c30] my-6" />
 
-            <hr className="border-[#242428] my-4" />
-
-            {/* Username Field */}
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-zinc-400 block mb-1">@ Username</label>
-              <div className="flex items-center gap-2 bg-[#1e1e22] border border-[#27272c] rounded-xl px-3.5 py-2">
-                <span className="text-zinc-500 font-bold text-sm">@</span>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-transparent text-white font-medium focus:outline-hidden flex-1 text-sm"
-                  placeholder="username"
-                />
-              </div>
-              <p className="text-xs text-zinc-500 px-1 leading-relaxed mt-1">
-                People can now message you using your optional username so you don&apos;t have to give out your phone number.
-              </p>
+            {/* Row 3: Username */}
+            <div className="flex items-center gap-4 py-1 group">
+              <AtSign className="w-5 h-5 text-gray-400 stroke-[1.8] flex-shrink-0" />
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onBlur={handleSaveProfile}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveProfile(); }}
+                className="bg-transparent text-white font-normal text-sm focus:outline-hidden focus:bg-[#28282c] px-2 py-1 rounded-lg w-full transition-colors cursor-text"
+                placeholder="Username"
+              />
             </div>
+
+            <p className="text-xs text-[#8e8e93] leading-relaxed pl-9">
+              People can now message you using your optional username so you don&apos;t have to give out your phone number.
+            </p>
           </div>
         </div>
       )}

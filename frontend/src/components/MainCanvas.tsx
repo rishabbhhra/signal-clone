@@ -33,6 +33,7 @@ import {
   Ban,
   ChevronRight,
   Link as LinkIcon,
+  Send,
 } from "lucide-react";
 import { RailTab } from "./ActivityRail";
 import { SettingsSection } from "./SubSidebar";
@@ -41,6 +42,10 @@ import { useSignal } from "@/context/SignalContext";
 import { VerifiedBadge } from "./VerifiedBadge";
 import { Avatar } from "./Avatar";
 import { format, isToday, isYesterday } from "date-fns";
+import { PollModal } from "./Modals/PollModal";
+import { EmojiStickerPicker } from "./EmojiStickerPicker";
+import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
+import { PollCard } from "./PollCard";
 
 interface MainCanvasProps {
   activeRailTab: RailTab;
@@ -109,6 +114,19 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
+  // Attachment menu & Poll state (Screenshot media_1788808987693.png)
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [isPollModalOpen, setIsPollModalOpen] = useState(false);
+  const photoVideoInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Audio Recording State (Real browser MediaRecorder)
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // 3-dots overflow menu states (Screenshot 4: media_1788799900728.png)
   const [showChatMenu, setShowChatMenu] = useState(false);
   const [showDisappearingSubmenu, setShowDisappearingSubmenu] = useState(false);
@@ -124,6 +142,116 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Real Audio Recording Handlers
+  const startRecordingAudio = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioStreamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      recorder.start(100);
+      setIsRecordingAudio(true);
+      setRecordingDuration(0);
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error("Audio recording permission error:", err);
+      showToast("Microphone access denied or not available");
+    }
+  };
+
+  const cancelRecordingAudio = () => {
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((t) => t.stop());
+      audioStreamRef.current = null;
+    }
+    setIsRecordingAudio(false);
+    setRecordingDuration(0);
+    audioChunksRef.current = [];
+  };
+
+  const stopAndSendAudio = () => {
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    if (!mediaRecorderRef.current) return;
+
+    mediaRecorderRef.current.onstop = async () => {
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach((t) => t.stop());
+        audioStreamRef.current = null;
+      }
+      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+      if (audioBlob.size > 0) {
+        const audioFile = new File([audioBlob], `voice-note-${Date.now()}.webm`, {
+          type: "audio/webm",
+        });
+        try {
+          await sendAttachment(audioFile, replyingTo ? replyingTo.id : undefined);
+          setReplyingTo(null);
+        } catch (e) {
+          console.error("Failed to send voice note:", e);
+          showToast("Failed to send voice note");
+        }
+      }
+      setIsRecordingAudio(false);
+      setRecordingDuration(0);
+      audioChunksRef.current = [];
+    };
+
+    if (mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const formatAudioSeconds = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const remainder = sec % 60;
+    return `${mins}:${remainder.toString().padStart(2, "0")}`;
+  };
+
+  const handleCreatePoll = async (pollData: {
+    question: string;
+    options: string[];
+    allowMultiple: boolean;
+  }) => {
+    try {
+      const pollPayload = {
+        type: "poll",
+        question: pollData.question,
+        options: pollData.options.map((opt) => ({ text: opt })),
+        allowMultiple: pollData.allowMultiple,
+      };
+      await sendMessage(JSON.stringify(pollPayload), replyingTo ? replyingTo.id : undefined);
+      setReplyingTo(null);
+      showToast("Poll sent");
+    } catch (e) {
+      console.error("Failed to create poll:", e);
+      showToast("Failed to create poll");
+    }
+  };
+
+  const handleSendMedia = async (url: string, type: "sticker" | "gif" | "image") => {
+    try {
+      await sendMessage(url, replyingTo ? replyingTo.id : undefined);
+      setReplyingTo(null);
+    } catch (e) {
+      console.error("Failed to send media:", e);
+    }
+  };
 
   // Scroll to bottom on message
   useEffect(() => {
@@ -204,7 +332,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   // ==========================================
   if (activeRailTab === "calls") {
     return (
-      <div className="flex-1 h-full bg-[#121214] flex flex-col items-center justify-center text-center p-8 select-none">
+      <div className="flex-1 h-full bg-[#1e1e20] flex flex-col items-center justify-center text-center p-8 select-none">
         <div
           onClick={onCreateCallLink}
           className="w-16 h-16 rounded-full flex items-center justify-center text-gray-500 hover:text-white cursor-pointer transition-transform hover:scale-105 mb-4"
@@ -223,14 +351,14 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   // ==========================================
   if (activeRailTab === "stories") {
     return (
-      <div className="flex-1 h-full bg-[#121214] flex flex-col items-center justify-center text-center p-8 select-none">
+      <div className="flex-1 h-full bg-[#1e1e20] flex flex-col items-center justify-center text-center p-8 select-none">
         <div
           onClick={onOpenAddStory}
           className="w-16 h-16 rounded-full flex items-center justify-center text-gray-500 hover:text-white cursor-pointer transition-transform hover:scale-105 mb-4"
         >
           <div className="relative w-8 h-8 flex items-center justify-center">
             <div className="w-6 h-8 rounded-sm border-2 border-current rotate-6 absolute -right-0.5 opacity-50" />
-            <div className="w-6 h-8 rounded-sm border-2 border-current -rotate-3 bg-[#121214] relative z-10" />
+            <div className="w-6 h-8 rounded-sm border-2 border-current -rotate-3 bg-[#1e1e20] relative z-10" />
           </div>
         </div>
         <p className="text-sm text-gray-400 max-w-xs leading-relaxed">
@@ -252,8 +380,8 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   // ==========================================
   if (!activeConversation) {
     return (
-      <div className="flex-1 h-full bg-[#121214] flex flex-col items-center justify-center text-center p-8 select-none">
-        <div className="w-16 h-16 rounded-full bg-[#1a1a1f] flex items-center justify-center text-signal-blue mb-4">
+      <div className="flex-1 h-full bg-[#1e1e20] flex flex-col items-center justify-center text-center p-8 select-none">
+        <div className="w-16 h-16 rounded-full bg-[#28282c] flex items-center justify-center text-signal-blue mb-4">
           <Lock className="w-8 h-8" />
         </div>
         <h3 className="text-lg font-bold text-white">Signal Desktop</h3>
@@ -278,9 +406,9 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   const typers = typingUsers[activeConversation.id] || [];
 
   return (
-    <div className="flex-1 h-full bg-[#121214] flex flex-col relative overflow-hidden select-none">
+    <div className="flex-1 h-full bg-[#1e1e20] flex flex-col relative overflow-hidden select-none">
       {/* Top Header (Matching Screenshot 1) */}
-      <header className="h-14 px-4 bg-[#121214] border-b border-[#242428]/70 flex items-center justify-between z-10">
+      <header className="h-14 px-4 bg-[#1e1e20] border-b border-[#28282c] flex items-center justify-between z-10">
         <div className="flex items-center gap-3 min-w-0">
           {/* Avatar */}
           {isNoteToSelf ? (
@@ -587,32 +715,47 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
 
       {/* Message Feed Area */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-        {/* Intro Card for Note to Self (Screenshot 1) */}
+        {/* Intro Card for Note to Self (Screenshot media_1788808797489.png) */}
         {isNoteToSelf && (
-          <div className="max-w-md mx-auto my-6 p-7 rounded-3xl bg-[#1c1c20] border border-[#28282e] text-center flex flex-col items-center shadow-lg">
-            <div className="w-14 h-14 rounded-full bg-[#dcdfe4] text-[#1c1c20] flex items-center justify-center mb-3">
-              <FileText className="w-8 h-8 stroke-[2]" />
+          <div className="relative mt-12 mb-6 pt-11 pb-7 px-8 rounded-[30px] bg-[#222225] border border-[#2e2e34] max-w-sm mx-auto text-center flex flex-col items-center shadow-lg">
+            {/* Overhanging Icon Circle */}
+            <div className="absolute -top-9 left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full bg-[#cfd2d8] flex items-center justify-center border-4 border-[#1e1e20] shadow-sm">
+              <svg
+                width="34"
+                height="38"
+                viewBox="0 0 24 28"
+                fill="none"
+                stroke="#36383e"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="2" width="18" height="24" rx="4" />
+                <line x1="7" y1="8" x2="17" y2="8" />
+                <line x1="7" y1="12" x2="17" y2="12" />
+                <line x1="7" y1="16" x2="17" y2="16" />
+              </svg>
             </div>
 
-            <div className="flex items-center gap-1.5 mb-2">
-              <h4 className="text-base font-bold text-white">Note to Self</h4>
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              <h4 className="text-base font-bold text-white tracking-tight">Note to Self</h4>
               <VerifiedBadge size="md" />
             </div>
 
-            <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[#242436] text-signal-blue text-[11px] font-semibold mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#272d4b] text-[#9db2ff] text-xs font-semibold mb-3.5 shadow-xs">
               <VerifiedBadge size="sm" />
               <span>Official chat</span>
             </div>
 
-            <p className="text-xs text-gray-400 leading-relaxed max-w-xs">
+            <p className="text-sm text-[#d4d4dc] leading-relaxed max-w-[270px] font-normal">
               You can add notes for yourself in this chat. If your account has any linked devices, new notes will be synced.
             </p>
           </div>
         )}
 
-        {/* Date Divider (Clean centered text matching Screenshot 1) */}
+        {/* Date Divider (Clean centered text matching Screenshot media_1788808797489.png) */}
         <div className="text-center my-4">
-          <span className="text-xs text-gray-500 font-medium">Today</span>
+          <span className="text-xs text-[#787880] font-normal">Yesterday</span>
         </div>
 
         {/* Messages List */}
@@ -700,31 +843,80 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
                   </div>
                 )}
 
-                {/* Photo Attachment */}
-                {msg.message_type === "image" && msg.file_url && (
+                {/* Poll Message */}
+                {(msg.message_type === "poll" || (msg.content && msg.content.startsWith('{"type":"poll"'))) ? (
+                  (() => {
+                    try {
+                      const pollData = JSON.parse(msg.content);
+                      return (
+                        <PollCard
+                          pollData={pollData}
+                          reactions={msg.reactions}
+                          currentUserId={currentUser?.id}
+                          onVote={(idx) => toggleReaction(msg.id, `vote:${idx}`)}
+                          isMe={isMe}
+                        />
+                      );
+                    } catch {
+                      return <span className="leading-relaxed">{msg.content}</span>;
+                    }
+                  })()
+                ) : (msg.message_type === "voice" || (msg.file_url && (msg.file_url.endsWith(".webm") || msg.file_url.endsWith(".ogg") || msg.file_url.endsWith(".mp3") || msg.file_url.endsWith(".wav")))) ? (
+                  /* Voice Note Message */
+                  <VoiceMessagePlayer audioUrl={msg.file_url || ""} isMe={isMe} />
+                ) : (msg.message_type === "image" && msg.file_url) || (msg.content && msg.content.startsWith("http") && (msg.content.includes("giphy.gif") || msg.content.includes("unsplash.com"))) ? (
+                  /* Photo / Sticker / GIF Attachment */
                   <div className="mb-1 rounded-xl overflow-hidden cursor-pointer">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={
-                        msg.file_url.startsWith("http")
-                          ? msg.file_url
-                          : `http://localhost:8000${msg.file_url}`
+                        msg.file_url
+                          ? msg.file_url.startsWith("http")
+                            ? msg.file_url
+                            : `http://localhost:8000${msg.file_url}`
+                          : msg.content
                       }
-                      alt={msg.file_name || "Photo"}
+                      alt={msg.file_name || "Media"}
                       className="max-h-72 w-auto object-contain rounded-xl hover:opacity-95 transition-opacity"
                       onClick={() =>
                         setLightboxImage(
-                          msg.file_url!.startsWith("http")
-                            ? msg.file_url!
-                            : `http://localhost:8000${msg.file_url}`
+                          msg.file_url
+                            ? msg.file_url.startsWith("http")
+                              ? msg.file_url
+                              : `http://localhost:8000${msg.file_url}`
+                            : msg.content
                         )
                       }
                     />
                   </div>
+                ) : msg.message_type === "file" && msg.file_url ? (
+                  /* File Document Attachment */
+                  <a
+                    href={
+                      msg.file_url.startsWith("http")
+                        ? msg.file_url
+                        : `http://localhost:8000${msg.file_url}`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    download
+                    className="flex items-center gap-3 p-2.5 rounded-xl bg-black/20 hover:bg-black/30 transition-colors my-1"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold truncate">{msg.file_name || "Attachment"}</p>
+                      <p className="text-[10px] opacity-75">
+                        {msg.file_size ? `${Math.round(msg.file_size / 1024)} KB` : "Document"}
+                      </p>
+                    </div>
+                    <Download className="w-4 h-4 opacity-75 hover:opacity-100 flex-shrink-0" />
+                  </a>
+                ) : (
+                  /* Text Content */
+                  <span className="leading-relaxed">{msg.content}</span>
                 )}
-
-                {/* Text Content */}
-                <span className="leading-relaxed">{msg.content}</span>
 
                 {/* Timestamp & Status Icon */}
                 <span className="inline-flex items-center gap-1 float-right mt-1 ml-2 text-[10px] opacity-75 select-none">
@@ -768,102 +960,216 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Bottom Message Input Bar (Matching Screenshot 1) */}
-      <footer className="p-4 bg-[#121214]">
+      {/* Bottom Message Input Bar (Matching Screenshot media_1788808987693.png & media_1788808987694.png) */}
+      <footer className="p-3.5 bg-[#1e1e20] relative">
         {/* Reply preview banner */}
         {replyingTo && (
-          <div className="mb-2 p-2 rounded-xl bg-[#222226] border-l-4 border-signal-blue flex items-center justify-between">
+          <div className="mb-2 p-2.5 rounded-2xl bg-[#28282c] border-l-4 border-signal-blue flex items-center justify-between shadow-md">
             <div className="min-w-0 flex-1">
               <span className="text-xs font-semibold text-signal-blue">
-                Replying to {replyingTo.sender.display_name}
+                Replying to {replyingTo.sender?.display_name || "Contact"}
               </span>
-              <p className="text-xs text-gray-400 truncate">{replyingTo.content}</p>
+              <p className="text-xs text-gray-300 truncate">{replyingTo.content}</p>
             </div>
             <button
               onClick={() => setReplyingTo(null)}
-              className="p-1 text-gray-400 hover:text-white"
+              className="p-1 text-gray-400 hover:text-white rounded-lg transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* The Exact Signal Pill Input Bar */}
-        <div className="w-full bg-[#222226] hover:bg-[#25252a] focus-within:bg-[#25252a] rounded-full px-4 py-2.5 flex items-center gap-3 transition-colors border border-transparent focus-within:border-[#383842]">
-          {/* Smiley on Left */}
-          <div className="relative">
+        {/* Audio Recording State or Normal Input Pill */}
+        {isRecordingAudio ? (
+          <div className="w-full bg-[#28282c] rounded-full px-5 py-2.5 flex items-center justify-between border border-red-500/40 shadow-xl animate-in fade-in duration-100 select-none">
+            {/* Pulsing indicator & timer */}
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse ring-4 ring-red-500/20" />
+              <span className="text-xs font-semibold text-red-400 tracking-wide uppercase">Recording</span>
+              <span className="text-sm font-mono text-white font-medium">{formatAudioSeconds(recordingDuration)}</span>
+
+              {/* Animated waveform bars */}
+              <div className="flex items-center gap-1 h-5 ml-2">
+                {[30, 75, 45, 90, 60, 100, 70, 40, 85, 55, 95, 65].map((h, idx) => (
+                  <div
+                    key={idx}
+                    style={{ height: `${h}%` }}
+                    className="w-1 bg-red-400/80 rounded-full animate-pulse"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Cancel & Send controls */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={cancelRecordingAudio}
+                className="p-2 rounded-full text-gray-400 hover:text-red-400 hover:bg-white/10 transition-colors"
+                title="Discard voice note"
+              >
+                <Trash2 className="w-4.5 h-4.5" />
+              </button>
+              <button
+                type="button"
+                onClick={stopAndSendAudio}
+                className="w-9 h-9 rounded-full bg-signal-blue hover:bg-blue-600 text-white flex items-center justify-center shadow-lg transition-transform active:scale-95"
+                title="Send voice note"
+              >
+                <Send className="w-4 h-4 ml-0.5" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full bg-[#28282c] hover:bg-[#2c2c30] focus-within:bg-[#2c2c30] rounded-full px-3.5 py-2 flex items-center gap-2.5 transition-colors border border-[#38383c]/60 shadow-xs relative">
+            {/* 1. Emoji / Stickers / GIFs Popover Button */}
+            <div className="relative flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className={`p-1 rounded-full transition-colors ${
+                  showEmojiPicker ? "text-white bg-[#3e3e44]" : "text-gray-400 hover:text-white"
+                }`}
+                title="Emoji & Stickers"
+              >
+                <Smile className="w-5 h-5 stroke-[1.8]" />
+              </button>
+
+              <EmojiStickerPicker
+                isOpen={showEmojiPicker}
+                onClose={() => setShowEmojiPicker(false)}
+                onSelectEmoji={(emoji) => setInputContent((prev) => prev + emoji)}
+                onSelectMedia={handleSendMedia}
+              />
+            </div>
+
+            {/* 2. Text Input placeholder "Message" */}
+            <input
+              type="text"
+              placeholder="Message"
+              value={inputContent}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              spellCheck={settings?.spellCheck}
+              className="bg-transparent text-white placeholder-gray-400 text-sm focus:outline-hidden flex-1 font-normal py-0.5"
+            />
+
+            {/* 3. Microphone Button on Right */}
             <button
               type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="text-gray-400 hover:text-white transition-colors"
-              title="Emoji"
+              onClick={startRecordingAudio}
+              className="p-1 text-gray-400 hover:text-white transition-colors flex-shrink-0"
+              title="Record Voice Note"
             >
-              <Smile className="w-5 h-5 stroke-[1.8]" />
+              <Mic className="w-5 h-5 stroke-[1.8]" />
             </button>
 
-            {showEmojiPicker && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowEmojiPicker(false)}
-                />
-                <div className="absolute left-0 bottom-full mb-3 p-2.5 bg-[#222226] border border-[#2f2f36] rounded-2xl shadow-2xl grid grid-cols-4 gap-2 z-50 animate-in fade-in zoom-in-95 duration-100">
-                  {EMOJIS.map((e) => (
+            {/* 4. Attachment '+' Button with Popover (Screenshot media_1788808987693.png) */}
+            <div className="relative flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  showAttachmentMenu
+                    ? "bg-[#3e3e44] text-white rotate-45"
+                    : "bg-[#323236] text-white hover:bg-[#3d3d42]"
+                }`}
+                title="Add attachment"
+              >
+                <Plus className="w-4.5 h-4.5 stroke-[2.2]" />
+              </button>
+
+              {/* Floating Menu anchored above '+' */}
+              {showAttachmentMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowAttachmentMenu(false)}
+                  />
+                  <div className="absolute right-0 bottom-full mb-3 bg-[#2b2b2e] border border-[#38383c]/70 rounded-2xl p-1.5 shadow-2xl min-w-[195px] z-50 animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-0.5 select-none">
+                    {/* Photos & videos */}
                     <button
-                      key={e}
                       type="button"
                       onClick={() => {
-                        setInputContent((prev) => prev + e);
-                        setShowEmojiPicker(false);
+                        setShowAttachmentMenu(false);
+                        photoVideoInputRef.current?.click();
                       }}
-                      className="text-xl p-1.5 hover:bg-[#2d2d35] rounded-lg transition-transform hover:scale-110"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#38383e] text-white text-sm font-normal transition-colors text-left"
                     >
-                      {e}
+                      <ImageIcon className="w-4.5 h-4.5 stroke-[1.8] flex-shrink-0" />
+                      <span>Photos & videos</span>
                     </button>
-                  ))}
-                </div>
-              </>
-            )}
+
+                    {/* File */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAttachmentMenu(false);
+                        fileInputRef.current?.click();
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#38383e] text-white text-sm font-normal transition-colors text-left"
+                    >
+                      <FileText className="w-4.5 h-4.5 stroke-[1.8] flex-shrink-0" />
+                      <span>File</span>
+                    </button>
+
+                    {/* Poll */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAttachmentMenu(false);
+                        setIsPollModalOpen(true);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#38383e] text-white text-sm font-normal transition-colors text-left"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="flex-shrink-0"
+                      >
+                        <rect x="3" y="4" width="18" height="3.5" rx="1.75" />
+                        <rect x="3" y="10.25" width="18" height="3.5" rx="1.75" />
+                        <rect x="3" y="16.5" width="18" height="3.5" rx="1.75" />
+                      </svg>
+                      <span>Poll</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Hidden File Inputs */}
+            <input
+              type="file"
+              ref={photoVideoInputRef}
+              accept="image/*,video/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="*/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
           </div>
-
-          {/* Input text placeholder "Message" */}
-          <input
-            type="text"
-            placeholder="Message"
-            value={inputContent}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            spellCheck={settings?.spellCheck}
-            className="bg-transparent text-white placeholder-gray-500 text-sm focus:outline-hidden flex-1 font-normal"
-          />
-
-          {/* Microphone on Right */}
-          <button
-            type="button"
-            onClick={() => sendMessage("🎤 [Voice Note: 0:03]")}
-            className="text-gray-400 hover:text-white transition-colors"
-            title="Record Voice Note"
-          >
-            <Mic className="w-5 h-5 stroke-[1.8]" />
-          </button>
-
-          {/* Plus icon on Far Right */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="text-gray-400 hover:text-white transition-colors"
-            title="Attach file or photo"
-          >
-            <Plus className="w-5 h-5 stroke-[2]" />
-          </button>
-        </div>
+        )}
       </footer>
+
+      {/* Poll Creation Modal */}
+      <PollModal
+        isOpen={isPollModalOpen}
+        onClose={() => setIsPollModalOpen(false)}
+        onCreatePoll={handleCreatePoll}
+      />
 
       {/* Lightbox modal for photos */}
       {lightboxImage && (
