@@ -23,6 +23,16 @@ import {
   PhoneCall,
   Shield,
   Download,
+  BellOff,
+  Settings as SettingsIcon,
+  Image as ImageIcon,
+  CheckCircle2,
+  RotateCcw,
+  Pin,
+  Archive,
+  Ban,
+  ChevronRight,
+  Link as LinkIcon,
 } from "lucide-react";
 import { RailTab } from "./ActivityRail";
 import { SettingsSection } from "./SubSidebar";
@@ -44,6 +54,25 @@ interface MainCanvasProps {
 
 const EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "👏", "🔥", "🎉"];
 
+const DISAPPEARING_OPTIONS = [
+  { label: "Off", seconds: 0 },
+  { label: "4 weeks", seconds: 2419200 },
+  { label: "1 week", seconds: 604800 },
+  { label: "1 day", seconds: 86400 },
+  { label: "8 hours", seconds: 28800 },
+  { label: "1 hour", seconds: 3600 },
+  { label: "5 minutes", seconds: 300 },
+  { label: "30 seconds", seconds: 30 },
+];
+
+const MUTE_OPTIONS = [
+  "1 hour",
+  "8 hours",
+  "1 day",
+  "7 days",
+  "Always",
+];
+
 export const MainCanvas: React.FC<MainCanvasProps> = ({
   activeRailTab,
   activeSettingsSection,
@@ -62,6 +91,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
     sendTyping,
     toggleReaction,
     deleteMessage,
+    updateDisappearingTimer,
     updateProfile,
     theme,
     toggleTheme,
@@ -77,6 +107,18 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  // 3-dots overflow menu states (Screenshot 4: media_1788799900728.png)
+  const [showChatMenu, setShowChatMenu] = useState(false);
+  const [showDisappearingSubmenu, setShowDisappearingSubmenu] = useState(false);
+  const [showMuteSubmenu, setShowMuteSubmenu] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2500);
+  };
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -260,7 +302,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
         </div>
 
         {/* Right header buttons */}
-        <div className="flex items-center gap-2 text-gray-400">
+        <div className="flex items-center gap-1.5 text-gray-400">
           {!isNoteToSelf && (
             <>
               <button
@@ -287,22 +329,235 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
             <Search className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={onToggleInfoDrawer}
-            className="p-1.5 hover:text-white rounded-lg hover:bg-[#25252a] transition-colors"
-            title="Conversation Options"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
+          {/* 3-dots overflow menu (Screenshot 4: media_1788799900728.png) */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowChatMenu(!showChatMenu);
+                setShowDisappearingSubmenu(false);
+                setShowMuteSubmenu(false);
+              }}
+              className={`p-1.5 rounded-lg transition-colors ${
+                showChatMenu ? "text-white bg-[#25252a]" : "hover:text-white hover:bg-[#25252a]"
+              }`}
+              title="More options"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={onToggleInfoDrawer}
-            className="px-2.5 py-1 rounded-full bg-[#26262a] hover:bg-[#323238] text-xs text-gray-300 font-medium transition-colors ml-1"
-          >
-            More Info
-          </button>
+            {showChatMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => {
+                    setShowChatMenu(false);
+                    setShowDisappearingSubmenu(false);
+                    setShowMuteSubmenu(false);
+                  }}
+                />
+                <div className="absolute right-0 top-10 w-56 bg-[#1e1e22] border border-[#2e2e36] rounded-2xl shadow-2xl py-1.5 z-50 text-gray-200 animate-in fade-in zoom-in-95 duration-100">
+                  {/* 1. Disappearing messages */}
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setShowDisappearingSubmenu(!showDisappearingSubmenu);
+                        setShowMuteSubmenu(false);
+                      }}
+                      onMouseEnter={() => setShowDisappearingSubmenu(true)}
+                      className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-[#2a2a32] hover:text-white transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span>Disappearing messages</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                    </button>
+
+                    {showDisappearingSubmenu && (
+                      <div
+                        className="absolute right-full top-0 mr-1 w-36 bg-[#1e1e22] border border-[#2e2e36] rounded-xl shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-75"
+                        onMouseLeave={() => setShowDisappearingSubmenu(false)}
+                      >
+                        {DISAPPEARING_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.label}
+                            onClick={async () => {
+                              try {
+                                await updateDisappearingTimer(activeConversation.id, opt.seconds);
+                                showToast(`Disappearing messages set to ${opt.label}`);
+                              } catch (e) {
+                                console.error(e);
+                              }
+                              setShowChatMenu(false);
+                              setShowDisappearingSubmenu(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-left transition-colors ${
+                              activeConversation.disappearing_seconds === opt.seconds
+                                ? "text-signal-blue font-semibold bg-signal-blue/10"
+                                : "text-gray-200 hover:bg-[#2a2a32] hover:text-white"
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            {activeConversation.disappearing_seconds === opt.seconds && (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. Mute notifications */}
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setShowMuteSubmenu(!showMuteSubmenu);
+                        setShowDisappearingSubmenu(false);
+                      }}
+                      onMouseEnter={() => setShowMuteSubmenu(true)}
+                      className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-[#2a2a32] hover:text-white transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <BellOff className="w-4 h-4 text-gray-400" />
+                        <span>Mute notifications</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                    </button>
+
+                    {showMuteSubmenu && (
+                      <div
+                        className="absolute right-full top-0 mr-1 w-36 bg-[#1e1e22] border border-[#2e2e36] rounded-xl shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-75"
+                        onMouseLeave={() => setShowMuteSubmenu(false)}
+                      >
+                        {MUTE_OPTIONS.map((dur) => (
+                          <button
+                            key={dur}
+                            onClick={() => {
+                              setIsMuted(true);
+                              showToast(`Notifications muted for ${dur}`);
+                              setShowChatMenu(false);
+                              setShowMuteSubmenu(false);
+                            }}
+                            className="w-full px-3 py-1.5 text-xs text-left text-gray-200 hover:bg-[#2a2a32] hover:text-white transition-colors"
+                          >
+                            {dur}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. Chat settings */}
+                  <button
+                    onClick={() => {
+                      setShowChatMenu(false);
+                      onToggleInfoDrawer();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-200 hover:bg-[#2a2a32] hover:text-white transition-colors"
+                  >
+                    <SettingsIcon className="w-4 h-4 text-gray-400" />
+                    <span>Chat settings</span>
+                  </button>
+
+                  {/* 4. All media */}
+                  <button
+                    onClick={() => {
+                      setShowChatMenu(false);
+                      onToggleInfoDrawer();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-200 hover:bg-[#2a2a32] hover:text-white transition-colors"
+                  >
+                    <ImageIcon className="w-4 h-4 text-gray-400" />
+                    <span>All media</span>
+                  </button>
+
+                  {/* Divider */}
+                  <div className="my-1 border-t border-[#2e2e36]" />
+
+                  {/* 5. Select messages */}
+                  <button
+                    onClick={() => {
+                      setShowChatMenu(false);
+                      showToast("Select messages mode enabled");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-200 hover:bg-[#2a2a32] hover:text-white transition-colors"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-gray-400" />
+                    <span>Select messages</span>
+                  </button>
+
+                  {/* 6. Mark as unread */}
+                  <button
+                    onClick={() => {
+                      setShowChatMenu(false);
+                      showToast("Chat marked as unread");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-200 hover:bg-[#2a2a32] hover:text-white transition-colors"
+                  >
+                    <RotateCcw className="w-4 h-4 text-gray-400" />
+                    <span>Mark as unread</span>
+                  </button>
+
+                  {/* 7. Pin chat */}
+                  <button
+                    onClick={() => {
+                      setShowChatMenu(false);
+                      showToast("Chat pinned to top");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-200 hover:bg-[#2a2a32] hover:text-white transition-colors"
+                  >
+                    <Pin className="w-4 h-4 text-gray-400" />
+                    <span>Pin chat</span>
+                  </button>
+
+                  {/* 8. Archive */}
+                  <button
+                    onClick={() => {
+                      setShowChatMenu(false);
+                      showToast("Chat moved to archive");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-200 hover:bg-[#2a2a32] hover:text-white transition-colors"
+                  >
+                    <Archive className="w-4 h-4 text-gray-400" />
+                    <span>Archive</span>
+                  </button>
+
+                  {/* 9. Block */}
+                  <button
+                    onClick={() => {
+                      setShowChatMenu(false);
+                      showToast("User blocked");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-200 hover:bg-[#2a2a32] hover:text-white transition-colors"
+                  >
+                    <Ban className="w-4 h-4 text-gray-400" />
+                    <span>Block</span>
+                  </button>
+
+                  {/* 10. Delete */}
+                  <button
+                    onClick={() => {
+                      setShowChatMenu(false);
+                      showToast("Chat history deleted");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-400 hover:bg-[#2a2a32] hover:text-red-300 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
+
+      {/* Toast feedback banner */}
+      {toastMessage && (
+        <div className="absolute top-16 right-6 z-50 bg-[#24242c] text-white text-xs px-3.5 py-1.5 rounded-xl shadow-2xl border border-[#383844] animate-in fade-in slide-in-from-top-2 duration-150">
+          {toastMessage}
+        </div>
+      )}
 
       {/* Disappearing Messages Pill if enabled */}
       {activeConversation.disappearing_seconds > 0 && (
@@ -455,7 +710,9 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
                   <span>{formatMessageTime(msg.created_at)}</span>
                   {isMe && (
                     <span className="inline-flex">
-                      {msg.status === "read" ? (
+                      {isNoteToSelf ? (
+                        <LinkIcon className="w-3 h-3 text-blue-200" />
+                      ) : msg.status === "read" ? (
                         <CheckCheck className="w-3.5 h-3.5 text-white" />
                       ) : msg.status === "delivered" ? (
                         <CheckCheck className="w-3.5 h-3.5 text-blue-200" />

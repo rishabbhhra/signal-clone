@@ -28,6 +28,7 @@ export default function Home() {
   // Active navigation tabs
   const [activeRailTab, setActiveRailTab] = useState<RailTab>("chats");
   const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>("general");
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   // Modals
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
@@ -133,21 +134,23 @@ export default function Home() {
           }
         }}
         unreadChatsCount={unreadCount}
-        onOpenMenu={() => setIsNewChatOpen(true)}
+        onToggleSidebar={() => setIsSidebarVisible((v) => !v)}
       />
 
       {/* 2. Middle Sub-Sidebar (340px) */}
-      <div className="flex h-full">
-        <SubSidebar
-          activeRailTab={activeRailTab}
-          activeSettingsSection={activeSettingsSection}
-          onSelectSettingsSection={(sec) => setActiveSettingsSection(sec)}
-          onOpenCompose={() => setIsNewChatOpen(true)}
-          onOpenNewGroup={() => setIsNewGroupOpen(true)}
-          onCreateCallLink={() => setIsCallLinkOpen(true)}
-          onOpenAddStory={() => setIsStoryCreatorOpen(true)}
-        />
-      </div>
+      {isSidebarVisible && (
+        <div className="flex h-full">
+          <SubSidebar
+            activeRailTab={activeRailTab}
+            activeSettingsSection={activeSettingsSection}
+            onSelectSettingsSection={(sec) => setActiveSettingsSection(sec)}
+            onOpenCompose={() => setIsNewChatOpen(true)}
+            onOpenNewGroup={() => setIsNewGroupOpen(true)}
+            onCreateCallLink={() => setIsCallLinkOpen(true)}
+            onOpenAddStory={() => setIsStoryCreatorOpen(true)}
+          />
+        </div>
+      )}
 
       {/* 3. Main Canvas (Chat feed / Calls canvas / Stories canvas / Settings view) */}
       <div className="flex-1 h-full flex overflow-hidden">

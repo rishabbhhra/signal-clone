@@ -24,6 +24,10 @@ import {
   Heart,
   ChevronDown,
   UserCheck,
+  ChevronLeft,
+  Users,
+  AtSign,
+  Hash,
 } from "lucide-react";
 import { RailTab } from "./ActivityRail";
 import { useSignal } from "@/context/SignalContext";
@@ -69,6 +73,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
     conversations,
     activeConversation,
     setActiveConversationId,
+    selectOrStartDirectChat,
     typingUsers,
     onlineStatus,
   } = useSignal();
@@ -76,6 +81,33 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [showChatsMenu, setShowChatsMenu] = useState(false);
   const [showUserSwitcher, setShowUserSwitcher] = useState(false);
+  const [isNewChatMode, setIsNewChatMode] = useState(false);
+  const [newChatSearch, setNewChatSearch] = useState("");
+
+  const sampleContacts = useMemo(() => [
+    { id: "c-harshith", name: "Harshith Reddy BU SIH...", initials: "HT", color: "#15803d", subtitle: "" },
+    { id: "c-joseph", name: "Joseph Sir", initials: "JS", color: "#7e22ce", subtitle: "" },
+    { id: "c-nitish", name: "Nitish Manocha...", initials: "NM", color: "#1d4ed8", subtitle: "" },
+    { id: "c-siddhartha", name: "Siddhartha BU SIH Team...", initials: "ST", color: "#b45309", subtitle: "" },
+    { id: "c-vaibhav", name: "Vaibhav IOT Jr", initials: "VJ", color: "#a16207", subtitle: "" },
+    { id: "c-venugopal", name: "Venugopal BU", initials: "VB", color: "#be185d", subtitle: "" },
+  ], []);
+
+  const combinedContacts = useMemo(() => {
+    const list = [...sampleContacts];
+    seedUsers.forEach((u) => {
+      if (u.id !== currentUser?.id && !list.some((c) => c.name === u.display_name)) {
+        list.push({
+          id: u.id,
+          name: u.display_name,
+          initials: u.display_name.slice(0, 2).toUpperCase(),
+          color: "#2563eb",
+          subtitle: `@${u.username}`,
+        });
+      }
+    });
+    return list;
+  }, [seedUsers, currentUser, sampleContacts]);
 
   // Format message time
   const formatTime = (dateStr?: string) => {
@@ -111,8 +143,136 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
 
   return (
     <div className="w-80 lg:w-[340px] h-full bg-[#1b1b1d] border-r border-[#26262a]/70 flex flex-col select-none flex-shrink-0 z-20">
-      {/* 1. CHATS TAB */}
-      {activeRailTab === "chats" && (
+      {/* 1. CHATS TAB - NEW CHAT VIEW (Screenshot 5: media_1788800001867.png) */}
+      {activeRailTab === "chats" && isNewChatMode && (
+        <>
+          {/* Header */}
+          <div className="h-14 px-3 flex items-center gap-2 border-b border-[#242428]/40">
+            <button
+              onClick={() => setIsNewChatMode(false)}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#25252a] transition-colors"
+              title="Back"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h2 className="text-white font-bold text-sm tracking-tight">New chat</h2>
+          </div>
+
+          {/* Search Box */}
+          <div className="px-3 py-2.5">
+            <div className="relative flex items-center bg-[#242428] rounded-xl px-3 py-1.5 border border-transparent focus-within:border-[#383842]">
+              <Search className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Name, username, or number"
+                value={newChatSearch}
+                onChange={(e) => setNewChatSearch(e.target.value)}
+                className="bg-transparent text-white text-xs placeholder-gray-500 focus:outline-hidden flex-1"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          {/* Action Options */}
+          <div className="px-2 space-y-0.5">
+            <button
+              onClick={() => {
+                setIsNewChatMode(false);
+                onOpenNewGroup();
+              }}
+              className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-[#222226] text-left transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#28282c] text-gray-200 flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-semibold text-gray-200">New group</span>
+            </button>
+
+            <button
+              onClick={() => setNewChatSearch("@")}
+              className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-[#222226] text-left transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#28282c] text-gray-200 flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                <AtSign className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-semibold text-gray-200">Find by username</span>
+            </button>
+
+            <button
+              onClick={() => setNewChatSearch("+")}
+              className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-[#222226] text-left transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#28282c] text-gray-200 flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                <Hash className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-semibold text-gray-200">Find by phone number</span>
+            </button>
+          </div>
+
+          {/* Section: Contacts */}
+          <div className="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400">
+            Contacts
+          </div>
+
+          {/* Contacts List */}
+          <div className="flex-1 overflow-y-auto px-2 space-y-1">
+            {/* Note to Self row */}
+            {(!newChatSearch.trim() || "note to self".includes(newChatSearch.toLowerCase())) && (
+              <div
+                onClick={() => {
+                  const noteConv = conversations.find((c) => c.type === "note_to_self");
+                  if (noteConv) setActiveConversationId(noteConv.id);
+                  setIsNewChatMode(false);
+                }}
+                className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-[#222226] cursor-pointer transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#28282c] text-gray-200 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 stroke-[2]" />
+                </div>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <span className="text-xs font-semibold text-white truncate">Note to Self</span>
+                  <VerifiedBadge size="sm" />
+                </div>
+              </div>
+            )}
+
+            {/* Other Contacts */}
+            {combinedContacts
+              .filter((c) => {
+                if (!newChatSearch.trim()) return true;
+                const q = newChatSearch.toLowerCase();
+                return (
+                  c.name.toLowerCase().includes(q) ||
+                  (c.subtitle && c.subtitle.toLowerCase().includes(q))
+                );
+              })
+              .map((c) => (
+                <div
+                  key={c.id}
+                  onClick={async () => {
+                    await selectOrStartDirectChat(c.id);
+                    setIsNewChatMode(false);
+                  }}
+                  className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-[#222226] cursor-pointer transition-colors"
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs text-white flex-shrink-0"
+                    style={{ backgroundColor: c.color }}
+                  >
+                    {c.initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-white truncate">{c.name}</div>
+                    {c.subtitle && <div className="text-[10px] text-gray-400 truncate">{c.subtitle}</div>}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </>
+      )}
+
+      {/* 1. CHATS TAB - MAIN LIST */}
+      {activeRailTab === "chats" && !isNewChatMode && (
         <>
           {/* Header */}
           <div className="h-14 px-4 flex items-center justify-between">
@@ -166,7 +326,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
 
             <div className="flex items-center gap-1 text-gray-400">
               <button
-                onClick={onOpenCompose}
+                onClick={() => setIsNewChatMode(true)}
                 className="p-1.5 hover:text-white rounded-lg hover:bg-[#25252a] transition-colors"
                 title="New Chat"
               >

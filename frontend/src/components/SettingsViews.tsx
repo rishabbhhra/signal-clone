@@ -15,6 +15,10 @@ import {
   Smartphone,
   Check,
   FolderPlus,
+  Folder,
+  Clock,
+  HelpCircle,
+  ExternalLink,
   Heart,
   Archive,
   PieChart,
@@ -143,6 +147,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
   const [autoDownloadAudio, setAutoDownloadAudio] = useState(true);
   const [autoDownloadVideo, setAutoDownloadVideo] = useState(true);
   const [autoDownloadDocs, setAutoDownloadDocs] = useState(true);
+  const [sentMediaQuality, setSentMediaQuality] = useState("Standard");
 
   // Backups State
   const [backupEnabled, setBackupEnabled] = useState(false);
@@ -869,7 +874,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       )}
 
       {/* =========================================================================
-          VIEW 8: DATA USAGE
+          VIEW 8: DATA USAGE (Screenshot 1: media_1788799742735.png)
       ========================================================================= */}
       {activeSection === "data_usage" && (
         <div className="max-w-2xl mx-auto w-full py-10 px-6 space-y-6 animate-in fade-in duration-150">
@@ -883,80 +888,124 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
                 <SignalSwitch checked={autoDownloadPhotos} onChange={setAutoDownloadPhotos} />
               </div>
               <div className="flex items-center justify-between py-3">
-                <span className="text-xs font-normal text-zinc-200">Audio</span>
-                <SignalSwitch checked={autoDownloadAudio} onChange={setAutoDownloadAudio} />
+                <span className="text-xs font-normal text-zinc-200">Videos</span>
+                <SignalSwitch checked={autoDownloadVideo} onChange={setAutoDownloadVideo} />
               </div>
               <div className="flex items-center justify-between py-3">
-                <span className="text-xs font-normal text-zinc-200">Video</span>
-                <SignalSwitch checked={autoDownloadVideo} onChange={setAutoDownloadVideo} />
+                <span className="text-xs font-normal text-zinc-200">Audio</span>
+                <SignalSwitch checked={autoDownloadAudio} onChange={setAutoDownloadAudio} />
               </div>
               <div className="flex items-center justify-between pt-3">
                 <span className="text-xs font-normal text-zinc-200">Documents</span>
                 <SignalSwitch checked={autoDownloadDocs} onChange={setAutoDownloadDocs} />
               </div>
             </div>
+            <p className="text-[11px] text-zinc-500 mt-2 px-1">
+              Voice messages and stickers are always auto-downloaded.
+            </p>
+          </div>
+
+          <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between">
+            <div className="pr-4">
+              <h4 className="text-xs font-normal text-zinc-200">Sent media quality</h4>
+              <p className="text-[11px] text-zinc-400 mt-0.5">Sending high quality media will use more data.</p>
+            </div>
+            <SignalSelect
+              value={sentMediaQuality}
+              onChange={setSentMediaQuality}
+              options={[
+                { label: "Standard", value: "Standard" },
+                { label: "High", value: "High" },
+              ]}
+            />
           </div>
         </div>
       )}
 
       {/* =========================================================================
-          VIEW 9: BACKUPS
+          VIEW 9: BACKUPS (Screenshot 3: media_1788799742737.png)
       ========================================================================= */}
       {activeSection === "backups" && (
         <div className="max-w-2xl mx-auto w-full py-10 px-6 space-y-6 animate-in fade-in duration-150">
           <h2 className="text-center text-zinc-100 font-semibold text-sm tracking-wide">Backups</h2>
+          <p className="text-xs text-zinc-400 -mt-2">
+            Back up your message history so you never lose data when you get a new phone or reinstall Signal.
+          </p>
 
-          <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
-            <div className="flex items-center justify-between pb-3">
-              <div className="pr-4">
-                <h4 className="text-xs font-normal text-zinc-200">Chat backups</h4>
-                <p className="text-[11px] text-zinc-400 mt-0.5">Backups are encrypted with a 30-digit passphrase.</p>
-              </div>
-              <SignalSwitch checked={backupEnabled} onChange={setBackupEnabled} />
+          <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-start gap-3.5">
+            <Clock className="w-5 h-5 text-zinc-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-normal text-zinc-200">Signal Secure Backups</h4>
+              <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">
+                Automatic backups with Signal&apos;s secure, end-to-end encrypted storage service. Get started on your phone.{" "}
+                <span className="text-[#3a76f0] hover:underline cursor-pointer">Learn more.</span>
+              </p>
             </div>
+          </div>
 
-            {backupEnabled && (
-              <div className="pt-3 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-400">Passphrase:</span>
-                  <span className="font-mono text-zinc-200 tracking-wider">84729 19284 81928 47291 93821 04928</span>
+          <div>
+            <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Other ways to back up</h3>
+            <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between">
+              <div className="flex items-start gap-3.5 pr-4">
+                <Folder className="w-5 h-5 text-zinc-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-xs font-normal text-zinc-200">Desktop backups</h4>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Create an end-to-end encrypted backup that you can restore on your phone.
+                  </p>
                 </div>
-                <button
-                  onClick={() => alert("Backup export initiated.")}
-                  className="w-full py-2 bg-[#28282c] hover:bg-[#34343a] text-zinc-200 text-xs rounded-xl font-medium transition-colors"
-                >
-                  Create Backup Now
-                </button>
               </div>
-            )}
+              <button
+                onClick={() => alert("Desktop backup wizard launched.")}
+                className="px-4 py-1.5 rounded-full bg-[#28282c] hover:bg-[#34343a] text-zinc-200 text-xs font-semibold transition-colors flex-shrink-0"
+              >
+                Set up
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* =========================================================================
-          VIEW 10: DONATE TO SIGNAL
+          VIEW 10: DONATE TO SIGNAL (Screenshot 2: media_1788799742736.png)
       ========================================================================= */}
       {activeSection === "donate" && (
-        <div className="max-w-xl mx-auto w-full py-12 px-6 space-y-6 text-center animate-in fade-in duration-150">
-          <div className="w-16 h-16 rounded-full bg-[#2a1b24] text-[#f43f5e] flex items-center justify-center mx-auto mb-2">
-            <Heart className="w-8 h-8 fill-current" />
-          </div>
-          <h2 className="text-white font-bold text-lg">Donate to Signal</h2>
-          <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
-            Signal is a 501(c)(3) nonprofit. We don’t do ads, track users, or sell data. Your donations keep independent, encrypted communication alive.
-          </p>
+        <div className="max-w-xl mx-auto w-full py-10 px-6 space-y-6 text-center animate-in fade-in duration-150">
+          <h2 className="text-center text-zinc-100 font-semibold text-sm tracking-wide">Donate to Signal</h2>
 
-          <div className="grid grid-cols-3 gap-3 pt-4">
-            {["$3 / month", "$5 / month", "$10 / month"].map((tier) => (
-              <button
-                key={tier}
-                onClick={() => alert(`Thank you for pledging support with ${tier}!`)}
-                className="py-3 px-2 rounded-2xl bg-[#1e1e22] hover:bg-[#28282c] border border-[#28282e] hover:border-[#3a76f0] text-xs font-semibold text-zinc-200 transition-all cursor-pointer"
-              >
-                {tier}
-              </button>
-            ))}
+          <div className="flex flex-col items-center pt-2">
+            <div className="w-20 h-20 rounded-full bg-[#c9cdd4] text-[#1c1c20] flex items-center justify-center font-bold text-3xl mb-4 shadow-sm">
+              {currentUser?.display_name ? currentUser.display_name[0].toUpperCase() : "R"}
+            </div>
+            <h3 className="text-base font-bold text-white mb-2">Proudly nonprofit</h3>
+            <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+              Donate to support private messaging. Keep Signal independent and ad-free.{" "}
+              <a href="https://signal.org/donate" target="_blank" rel="noreferrer" className="text-[#3a76f0] underline">
+                Read more
+              </a>
+            </p>
+
+            <button
+              onClick={() => window.open("https://signal.org/donate", "_blank")}
+              className="mt-5 px-7 py-2 rounded-full bg-[#3a76f0] hover:bg-[#2860e6] text-white text-xs font-semibold transition-all shadow-sm"
+            >
+              Donate
+            </button>
           </div>
+
+          <hr className="border-[#26262a] my-8" />
+
+          <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between hover:bg-[#232328] transition-colors cursor-pointer text-left">
+            <div className="flex items-center gap-3 text-xs text-zinc-200">
+              <HelpCircle className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+              <span>Donor FAQs</span>
+            </div>
+            <ExternalLink className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+          </div>
+
+          <p className="text-[11px] text-zinc-500 text-left px-1">
+            Badges and monthly donations can be managed on your mobile device.
+          </p>
         </div>
       )}
     </div>

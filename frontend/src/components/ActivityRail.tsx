@@ -16,23 +16,41 @@ interface ActivityRailProps {
   onSelectTab: (tab: RailTab) => void;
   unreadChatsCount?: number;
   onOpenMenu?: () => void;
+  onToggleSidebar?: () => void;
 }
+
+// Custom Signal Stories Icon matching official client
+const StoriesIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <rect x="5.5" y="4" width="11" height="16" rx="3" />
+    <path d="M18.5 7.5A2.5 2.5 0 0 1 20 9.8v6.4a2.5 2.5 0 0 1-1.5 2.3" />
+  </svg>
+);
 
 export const ActivityRail: React.FC<ActivityRailProps> = ({
   activeTab,
   onSelectTab,
   unreadChatsCount = 0,
   onOpenMenu,
+  onToggleSidebar,
 }) => {
   return (
     <nav className="w-14 h-full bg-[#121212] border-r border-[#242428]/60 flex flex-col justify-between items-center py-2.5 select-none flex-shrink-0 z-30">
       {/* Top Section */}
       <div className="flex flex-col items-center gap-1 w-full px-2">
-        {/* Hamburger Menu button */}
+        {/* Hamburger Menu button (toggles sidebar visibility) */}
         <button
-          onClick={onOpenMenu}
+          onClick={onToggleSidebar || onOpenMenu}
           className="w-10 h-10 rounded-xl flex items-center justify-center text-[#8e8e93] hover:text-white hover:bg-[#1e1e22] transition-colors mb-1"
-          title="Menu"
+          title="Toggle Sidebar (≡)"
         >
           <Menu className="w-5 h-5 stroke-[2.2]" />
         </button>
@@ -76,11 +94,7 @@ export const ActivityRail: React.FC<ActivityRailProps> = ({
           }`}
           title="Stories"
         >
-          <div className="relative w-5 h-5 flex items-center justify-center">
-            {/* Signal Stories overlapping card icon */}
-            <div className="w-3.5 h-4.5 rounded-sm border-2 border-current rotate-6 absolute -right-0.5 opacity-50" />
-            <div className="w-3.5 h-4.5 rounded-sm border-2 border-current -rotate-3 bg-[#121212] relative z-10" />
-          </div>
+          <StoriesIcon className="w-5 h-5" />
         </button>
       </div>
 
