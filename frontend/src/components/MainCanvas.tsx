@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { RailTab } from "./ActivityRail";
 import { SettingsSection } from "./SubSidebar";
+import { SettingsViews } from "./SettingsViews";
 import { useSignal } from "@/context/SignalContext";
 import { VerifiedBadge } from "./VerifiedBadge";
 import { Avatar } from "./Avatar";
@@ -77,30 +78,9 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  // Profile edit state
-  const [editName, setEditName] = useState(currentUser?.display_name || "");
-  const [editBio, setEditBio] = useState(currentUser?.bio || "About");
-  const [editUsername, setEditUsername] = useState(currentUser?.username || "");
-  const [profileSaved, setProfileSaved] = useState(false);
-
-  // General settings state toggles
-  const [openAtLogin, setOpenAtLogin] = useState(false);
-  const [micPermission, setMicPermission] = useState(true);
-  const [camPermission, setCamPermission] = useState(true);
-  const [autoUpdates, setAutoUpdates] = useState(true);
-
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Sync profile fields
-  useEffect(() => {
-    if (currentUser) {
-      setEditName(currentUser.display_name || "");
-      setEditBio(currentUser.bio || "");
-      setEditUsername(currentUser.username || "");
-    }
-  }, [currentUser]);
 
   // Scroll to bottom on message
   useEffect(() => {
@@ -159,19 +139,6 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
     }
   };
 
-  const handleSaveProfile = async () => {
-    try {
-      await updateProfile({
-        display_name: editName.trim(),
-        bio: editBio.trim(),
-      });
-      setProfileSaved(true);
-      setTimeout(() => setProfileSaved(false), 2000);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   // ==========================================
   // VIEW 1: CALLS TAB
   // ==========================================
@@ -217,214 +184,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   // VIEW 3: SETTINGS TAB
   // ==========================================
   if (activeRailTab === "settings") {
-    return (
-      <div className="flex-1 h-full bg-[#121214] flex flex-col overflow-y-auto select-none">
-        {/* Profile Section (Screenshot 4) */}
-        {activeSettingsSection === "profile" && (
-          <div className="max-w-xl mx-auto w-full py-12 px-6 space-y-8 animate-in fade-in duration-150">
-            <h2 className="text-center text-white font-semibold text-base">Profile</h2>
-
-            {/* Avatar */}
-            <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full bg-[#c9cdd4] text-[#1c1c20] flex items-center justify-center font-bold text-3xl mb-3 shadow-lg">
-                {currentUser?.display_name ? currentUser.display_name[0].toUpperCase() : "R"}
-              </div>
-              <button
-                onClick={() => {
-                  const name = prompt("Enter new display name:", editName);
-                  if (name) {
-                    setEditName(name);
-                    updateProfile({ display_name: name });
-                  }
-                }}
-                className="px-4 py-1.5 rounded-full bg-[#26262b] hover:bg-[#323238] text-xs font-semibold text-gray-200 transition-colors"
-              >
-                Edit photo
-              </button>
-            </div>
-
-            {/* Name & About Fields */}
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center gap-3.5 text-sm text-gray-300 px-1">
-                <User className="w-4.5 h-4.5 text-gray-500 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onBlur={handleSaveProfile}
-                  className="bg-transparent border-b border-transparent focus:border-signal-blue text-white font-medium focus:outline-hidden flex-1 py-1"
-                  placeholder="Your Name"
-                />
-              </div>
-
-              <div className="flex items-center gap-3.5 text-sm text-gray-300 px-1">
-                <Edit2 className="w-4.5 h-4.5 text-gray-500 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  onBlur={handleSaveProfile}
-                  className="bg-transparent border-b border-transparent focus:border-signal-blue text-gray-300 focus:outline-hidden flex-1 py-1"
-                  placeholder="About"
-                />
-              </div>
-
-              <p className="text-xs text-gray-500 px-1 leading-relaxed">
-                Your profile and changes to it will be visible to people you message, contacts and groups.
-              </p>
-
-              <hr className="border-[#242428] my-6" />
-
-              {/* Username Field */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-3.5 text-sm text-gray-300 px-1">
-                  <span className="text-gray-500 font-bold text-base w-4.5 flex justify-center">@</span>
-                  <input
-                    type="text"
-                    value={editUsername}
-                    onChange={(e) => setEditUsername(e.target.value)}
-                    className="bg-transparent text-white font-medium focus:outline-hidden flex-1 py-1"
-                    placeholder="Username"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 px-1 leading-relaxed">
-                  People can now message you using your optional username so you don&apos;t have to give out your phone number.
-                </p>
-              </div>
-
-              {profileSaved && (
-                <p className="text-xs text-emerald-400 font-medium text-center">Changes saved!</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* General Section (Screenshot 5) */}
-        {activeSettingsSection === "general" && (
-          <div className="max-w-2xl mx-auto w-full py-12 px-6 space-y-6 animate-in fade-in duration-150">
-            <h2 className="text-center text-white font-semibold text-base mb-6">General</h2>
-
-            {/* Card 1: Phone & Device */}
-            <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-300 font-medium">Phone Number</span>
-                <span className="text-gray-400 font-mono">{currentUser?.phone_number || "+91 62041 65936"}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs pt-1">
-                <span className="text-gray-300 font-medium">Device Name</span>
-                <span className="text-gray-400">macOS</span>
-              </div>
-              <p className="text-[11px] text-gray-500 pt-1 leading-relaxed border-t border-[#28282e]">
-                To change the name of this device, open Signal on your phone and navigate to Settings &gt; Linked devices
-              </p>
-            </div>
-
-            {/* Card 2: System */}
-            <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] space-y-2">
-              <h4 className="text-xs font-semibold text-gray-300">System</h4>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-gray-300">Open at computer login</span>
-                <input
-                  type="checkbox"
-                  checked={openAtLogin}
-                  onChange={(e) => setOpenAtLogin(e.target.checked)}
-                  className="w-9 h-5 rounded-full accent-signal-blue cursor-pointer"
-                />
-              </div>
-            </div>
-
-            {/* Card 3: Permissions */}
-            <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] space-y-3">
-              <h4 className="text-xs font-semibold text-gray-300">Permissions</h4>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-300">Allow access to the microphone</span>
-                <input
-                  type="checkbox"
-                  checked={micPermission}
-                  onChange={(e) => setMicPermission(e.target.checked)}
-                  className="w-9 h-5 rounded-full accent-signal-blue cursor-pointer"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-300">Allow access to the camera</span>
-                <input
-                  type="checkbox"
-                  checked={camPermission}
-                  onChange={(e) => setCamPermission(e.target.checked)}
-                  className="w-9 h-5 rounded-full accent-signal-blue cursor-pointer"
-                />
-              </div>
-            </div>
-
-            {/* Card 4: Updates */}
-            <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c]">
-              <h4 className="text-xs font-semibold text-gray-300 mb-2">Updates</h4>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-300">Automatically download updates</span>
-                <input
-                  type="checkbox"
-                  checked={autoUpdates}
-                  onChange={(e) => setAutoUpdates(e.target.checked)}
-                  className="w-9 h-5 rounded-full accent-signal-blue cursor-pointer"
-                />
-              </div>
-            </div>
-
-            {/* Card 5: Delete data */}
-            <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] flex items-center justify-between">
-              <div className="pr-4">
-                <h4 className="text-xs font-semibold text-gray-300">Delete application data</h4>
-                <p className="text-[11px] text-gray-500 mt-0.5">
-                  This will delete all data in the application, removing all messages and saved account information.
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  if (confirm("Are you sure you want to delete all local data?")) {
-                    localStorage.clear();
-                    window.location.reload();
-                  }
-                }}
-                className="px-3 py-1.5 rounded-lg bg-[#331c1e] hover:bg-[#422225] text-red-400 text-xs font-semibold transition-colors flex-shrink-0"
-              >
-                Delete data
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Appearance Tab */}
-        {activeSettingsSection === "appearance" && (
-          <div className="max-w-2xl mx-auto w-full py-12 px-6 space-y-6">
-            <h2 className="text-center text-white font-semibold text-base mb-6">Appearance</h2>
-            <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] flex items-center justify-between">
-              <div>
-                <h4 className="text-xs font-semibold text-gray-200">Theme</h4>
-                <p className="text-[11px] text-gray-500">Toggle between Signal Dark and Light mode</p>
-              </div>
-              <button
-                onClick={toggleTheme}
-                className="px-3 py-1.5 rounded-lg bg-[#28282c] text-xs font-semibold text-gray-200 hover:bg-[#323238]"
-              >
-                {theme === "dark" ? "Dark Mode" : "Light Mode"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Other Settings placeholders */}
-        {!["profile", "general", "appearance"].includes(activeSettingsSection) && (
-          <div className="max-w-2xl mx-auto w-full py-12 px-6 space-y-6">
-            <h2 className="text-center text-white font-semibold text-base mb-6 capitalize">
-              {activeSettingsSection.replace("_", " ")}
-            </h2>
-            <div className="p-6 rounded-2xl bg-[#1e1e22] border border-[#27272c] text-center text-xs text-gray-400">
-              Settings configured and synced across your Signal devices.
-            </div>
-          </div>
-        )}
-      </div>
-    );
+    return <SettingsViews activeSection={activeSettingsSection} />;
   }
 
   // ==========================================
