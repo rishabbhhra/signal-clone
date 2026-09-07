@@ -103,13 +103,25 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSeedUsers(seedList);
 
         const token = localStorage.getItem("signal_token");
+        let userLoaded = false;
         if (token) {
-          const user = await api.getMe();
-          setCurrentUser(user);
-        } else if (seedList.length > 0) {
-          // Default to Alice if available for instant live demo experience
-          const alice = seedList.find((u) => u.username === "alice") || seedList[0];
-          const switchRes = await api.switchUser(alice.id);
+          try {
+            const user = await api.getMe();
+            setCurrentUser(user);
+            userLoaded = true;
+          } catch (e) {
+            console.warn("Stored token expired or invalid, resetting:", e);
+            api.removeToken();
+          }
+        }
+
+        if (!userLoaded && seedList.length > 0) {
+          // Default to Rishabh (or first seed user) for instant seamless experience matching the screenshots
+          const defaultUser =
+            seedList.find((u) => u.display_name?.toLowerCase().includes("rishabh")) ||
+            seedList.find((u) => u.username === "alice") ||
+            seedList[0];
+          const switchRes = await api.switchUser(defaultUser.id);
           api.setToken(switchRes.access_token);
           setCurrentUser(switchRes.user);
         }
