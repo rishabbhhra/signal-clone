@@ -32,6 +32,7 @@ import {
   Archive,
   Ban,
   ChevronRight,
+  ChevronLeft,
   Link as LinkIcon,
   Send,
 } from "lucide-react";
@@ -55,6 +56,7 @@ interface MainCanvasProps {
   onCreateCallLink: () => void;
   onOpenAddStory: () => void;
   onToggleInfoDrawer: () => void;
+  onMobileBack?: () => void;
 }
 
 const EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "👏", "🔥", "🎉"];
@@ -86,6 +88,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   onCreateCallLink,
   onOpenAddStory,
   onToggleInfoDrawer,
+  onMobileBack,
 }) => {
   const {
     currentUser,
@@ -410,7 +413,17 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
       {/* Top Header (Matching Screenshot 1) */}
       <header className="h-14 px-4 bg-[#111113] border-b border-[#28282c] flex items-center justify-between z-10">
         <div className="flex items-center gap-3 min-w-0">
+          {/* Mobile back button */}
+          {onMobileBack && (
+            <button
+              onClick={onMobileBack}
+              className="md:hidden p-1 -ml-1 rounded-lg text-gray-400 hover:text-white transition-colors flex-shrink-0"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
           {/* Avatar */}
+
           {isNoteToSelf ? (
             <div className="w-9 h-9 rounded-full bg-[#dcdfe4] text-[#1c1c20] flex items-center justify-center flex-shrink-0">
               <FileText className="w-5 h-5 stroke-[2]" />

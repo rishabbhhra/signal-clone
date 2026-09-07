@@ -29,6 +29,9 @@ export default function Home() {
   const [activeRailTab, setActiveRailTab] = useState<RailTab>("chats");
   const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>("general");
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  // Mobile: tracks whether we're showing the chat panel (vs the list panel)
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+
 
   // Modals
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
@@ -60,6 +63,13 @@ export default function Home() {
       }
     }
   }, [conversations, activeConversation, setActiveConversationId]);
+
+  // On mobile: auto-show chat panel when a conversation is selected
+  useEffect(() => {
+    if (activeConversation) {
+      setIsMobileChatOpen(true);
+    }
+  }, [activeConversation?.id]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -124,22 +134,56 @@ export default function Home() {
 
   return (
     <main className="h-screen w-screen flex overflow-hidden bg-[#111113] text-white font-sans select-none">
-      {/* 1. Far-Left Activity Rail (56px) */}
-      <ActivityRail
-        activeTab={activeRailTab}
-        onSelectTab={(tab) => {
-          setActiveRailTab(tab);
-          if (tab === "settings") {
-            setActiveSettingsSection("profile");
-          }
-        }}
-        unreadChatsCount={unreadCount}
-        onToggleSidebar={() => setIsSidebarVisible((v) => !v)}
-      />
 
-      {/* 2. Middle Sub-Sidebar (340px) */}
-      {isSidebarVisible && (
-        <div className="flex h-full">
+      {/* 1. Activity Rail — hidden on mobile, shown on md+ */}
+      <div className="hidden md:flex">
+        <ActivityRail
+          activeTab={activeRailTab}
+          onSelectTab={(tab) => {
+            setActiveRailTab(tab);
+            setIsMobileChatOpen(false); // go back to list on mobile when switching tabs
+            if (tab === "settings") {
+              setActiveSettingsSection("general");
+            }
+          }}
+          unreadChatsCount={unreadCount}
+          onToggleSidebar={() => setIsSidebarVisible((v) => !v)}
+        />
+      </div>
+
+      {/* 2. Left Panel: Activity Rail (mobile bottom) + SubSidebar
+              Mobile: full screen when !isMobileChatOpen, hidden when isMobileChatOpen
+              md+: always visible (if isSidebarVisible) */}
+      <div className={`
+        flex flex-col md:flex-row h-full
+        ${isMobileChatOpen ? "hidden md:flex" : "flex w-full md:w-auto"}
+      `}>
+        {/* Mobile-only bottom nav bar (replaces activity rail) */}
+        <div className="md:hidden flex items-center justify-around border-b border-[#222226] bg-[#161618] px-2 py-2 flex-shrink-0">
+          {([
+            { id: "chats", icon: "💬", label: "Chats" },
+            { id: "calls", icon: "📞", label: "Calls" },
+            { id: "stories", icon: "◉", label: "Stories" },
+            { id: "settings", icon: "⚙️", label: "Settings" },
+          ] as const).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveRailTab(tab.id);
+                if (tab.id === "settings") setActiveSettingsSection("general");
+              }}
+              className={`flex flex-col items-center gap-0.5 px-4 py-1 rounded-xl transition-colors ${
+                activeRailTab === tab.id ? "text-white" : "text-gray-500"
+              }`}
+            >
+              <span className="text-lg leading-none">{tab.icon}</span>
+              <span className="text-[10px]">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* SubSidebar */}
+        {isSidebarVisible && (
           <SubSidebar
             activeRailTab={activeRailTab}
             activeSettingsSection={activeSettingsSection}
@@ -149,11 +193,14 @@ export default function Home() {
             onCreateCallLink={() => setIsCallLinkOpen(true)}
             onOpenAddStory={() => setIsStoryCreatorOpen(true)}
           />
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* 3. Main Canvas (Chat feed / Calls canvas / Stories canvas / Settings view) */}
-      <div className="flex-1 h-full flex overflow-hidden">
+      {/* 3. Main Canvas — hidden on mobile when !isMobileChatOpen, full screen when open */}
+      <div className={`
+        flex-1 h-full flex overflow-hidden
+        ${!isMobileChatOpen ? "hidden md:flex" : "flex w-full"}
+      `}>
         <MainCanvas
           activeRailTab={activeRailTab}
           activeSettingsSection={activeSettingsSection}
@@ -162,10 +209,12 @@ export default function Home() {
           onCreateCallLink={() => setIsCallLinkOpen(true)}
           onOpenAddStory={() => setIsStoryCreatorOpen(true)}
           onToggleInfoDrawer={() => setIsInfoDrawerOpen(!isInfoDrawerOpen)}
+          onMobileBack={() => setIsMobileChatOpen(false)}
         />
 
         {/* Collapsible Info Drawer (right side) */}
         {isInfoDrawerOpen && activeConversation && activeRailTab === "chats" && (
+
           <GroupInfoDrawer
             isOpen={isInfoDrawerOpen}
             onClose={() => setIsInfoDrawerOpen(false)}
