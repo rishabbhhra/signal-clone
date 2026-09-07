@@ -99,6 +99,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
     setSoundEnabled,
     typingUsers,
     onlineStatus,
+    settings,
   } = useSignal();
 
   // Chat message state
@@ -137,8 +138,25 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
     }
   };
 
+  const convertEmoticonsToEmoji = (str: string) => {
+    if (!settings?.convertEmoticons) return str;
+    return str
+      .replace(/:-?\)/g, "🙂")
+      .replace(/:-?D/g, "😃")
+      .replace(/:-?P/gi, "😛")
+      .replace(/;-?\)/g, "😉")
+      .replace(/:-?\(/g, "🙁")
+      .replace(/:-?O/gi, "😮")
+      .replace(/<3/g, "❤️")
+      .replace(/:-?\*/g, "😘");
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setInputContent(e.target.value);
+    let val = e.target.value;
+    if (settings?.convertEmoticons) {
+      val = convertEmoticonsToEmoji(val);
+    }
+    setInputContent(val);
     sendTyping(true);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     typingTimerRef.current = setTimeout(() => {
@@ -655,13 +673,16 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
                 </div>
               )}
 
-              {/* Message Bubble (Signal Blue #2c6bed for outgoing, matching screenshot 1!) */}
+              {/* Message Bubble (Dynamic Chat Color from settings) */}
               <div
                 className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-sm relative break-words shadow-xs ${
                   isMe
-                    ? "bg-signal-blue text-white rounded-br-xs"
+                    ? "text-white rounded-br-xs"
                     : "bg-[#28282e] text-white rounded-bl-xs"
                 }`}
+                style={{
+                  backgroundColor: isMe ? (settings?.chatColor || "#2c6bed") : undefined,
+                }}
               >
                 {/* Quoted Reply */}
                 {msg.reply_to && (
@@ -712,6 +733,8 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
                     <span className="inline-flex">
                       {isNoteToSelf ? (
                         <LinkIcon className="w-3 h-3 text-blue-200" />
+                      ) : settings && !settings.readReceipts ? (
+                        <Check className="w-3.5 h-3.5 text-blue-200" />
                       ) : msg.status === "read" ? (
                         <CheckCheck className="w-3.5 h-3.5 text-white" />
                       ) : msg.status === "delivered" ? (
@@ -810,6 +833,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
             value={inputContent}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            spellCheck={settings?.spellCheck}
             className="bg-transparent text-white placeholder-gray-500 text-sm focus:outline-hidden flex-1 font-normal"
           />
 

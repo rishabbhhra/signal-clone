@@ -46,3 +46,77 @@ body {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* Signal Authentic Light Theme Overrides */
+html.light,
+html.light body {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+}
+
+html.light .bg-\[\#121214\],
+html.light .bg-\[\#121212\] {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+}
+
+html.light .bg-\[\#1b1b1d\],
+html.light .bg-\[\#1a1a1e\] {
+  background-color: #f7f7f8 !important;
+  border-color: #e5e5ea !important;
+}
+
+html.light .bg-\[\#1e1e22\],
+html.light .bg-\[\#1c1c20\],
+html.light .bg-\[\#202024\],
+html.light .bg-\[\#222226\] {
+  background-color: #f0f0f3 !important;
+  border-color: #e5e5ea !important;
+}
+
+html.light .bg-\[\#242428\],
+html.light .bg-\[\#28282c\],
+html.light .bg-\[\#25252a\] {
+  background-color: #e5e5ea !important;
+  color: #111111 !important;
+}
+
+html.light .text-white,
+html.light .text-zinc-100,
+html.light .text-zinc-200 {
+  color: #111111 !important;
+}
+
+html.light .text-gray-200,
+html.light .text-gray-300,
+html.light .text-zinc-300 {
+  color: #333336 !important;
+}
+
+html.light .text-gray-400,
+html.light .text-zinc-400,
+html.light .text-gray-500,
+html.light .text-zinc-500 {
+  color: #6c6c70 !important;
+}
+
+html.light .border-\[\#242428\],
+html.light .border-\[\#242428\]\/70,
+html.light .border-\[\#242428\]\/60,
+html.light .border-\[\#242428\]\/40,
+html.light .border-\[\#26262a\]\/70,
+html.light .border-\[\#27272c\],
+html.light .border-\[\#28282e\],
+html.light .border-\[\#2e2e36\],
+html.light .border-\[\#2f2f36\],
+html.light .divide-\[\#28282e\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e5e5ea !important;
+}
+
+html.light .hover\:bg-\[\#222226\]:hover,
+html.light .hover\:bg-\[\#25252a\]:hover,
+html.light .hover\:bg-\[\#1e1e22\]:hover,
+html.light .hover\:bg-\[\#2c2c34\]:hover,
+html.light .hover\:bg-\[\#28282c\]:hover {
+  background-color: #e8e8ed !important;
+}

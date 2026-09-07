@@ -5,6 +5,121 @@ import { User, Conversation, Message, Contact, UserBrief } from "@/types";
 import { api } from "@/lib/api";
 import { playIncomingSound, playOutgoingSound } from "@/lib/sound";
 
+export interface AppSettings {
+  // Appearance
+  themeMode: "System" | "Dark" | "Light";
+  chatColor: string;
+  zoomLevel: string;
+  language: string;
+
+  // Chats
+  useAddressBookPhotos: boolean;
+  keepMutedArchived: boolean;
+  spellCheck: boolean;
+  showFormattingPopover: boolean;
+  generateLinkPreviews: boolean;
+  convertEmoticons: boolean;
+  selectedSkinTone: number;
+  chatFolders: { id: string; name: string }[];
+
+  // Calls
+  enableIncomingCalls: boolean;
+  playCallingSounds: boolean;
+  selectedVideoDevice: string;
+  selectedMicDevice: string;
+  selectedSpeakerDevice: string;
+  alwaysRelayCalls: boolean;
+
+  // Notifications
+  enableNotifications: boolean;
+  showCallNotifications: boolean;
+  reactionNotifications: boolean;
+  notificationContent: string;
+  pushNotificationSounds: boolean;
+  inChatMessageSounds: boolean;
+  includeMutedInBadge: boolean;
+  activeNotificationProfile: string;
+
+  // Privacy
+  readReceipts: boolean;
+  typingIndicators: boolean;
+  defaultDisappearingTimer: string;
+  storiesEnabled: boolean;
+  sealedSenderIcon: boolean;
+  autoKeyVerification: boolean;
+  blockedUsers: { id: string; name: string; username?: string }[];
+  phonePrivacy: "everyone" | "nobody";
+
+  // General
+  deviceName: string;
+  openAtLogin: boolean;
+  micPermission: boolean;
+  camPermission: boolean;
+
+  // Data usage
+  autoDownloadPhotos: boolean;
+  autoDownloadVideo: boolean;
+  autoDownloadAudio: boolean;
+  autoDownloadDocs: boolean;
+  sentMediaQuality: "Standard" | "High";
+
+  // Backups
+  backupPassphrase?: string;
+  lastBackupDate?: string;
+}
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  themeMode: "Dark",
+  chatColor: "#2c6bed",
+  zoomLevel: "100%",
+  language: "System Language",
+
+  useAddressBookPhotos: false,
+  keepMutedArchived: false,
+  spellCheck: true,
+  showFormattingPopover: true,
+  generateLinkPreviews: true,
+  convertEmoticons: true,
+  selectedSkinTone: 0,
+  chatFolders: [],
+
+  enableIncomingCalls: true,
+  playCallingSounds: true,
+  selectedVideoDevice: "FaceTime HD Camera (C4E1:9BFB)",
+  selectedMicDevice: "Default (Airdopes 161)",
+  selectedSpeakerDevice: "Default (Airdopes 161)",
+  alwaysRelayCalls: false,
+
+  enableNotifications: true,
+  showCallNotifications: true,
+  reactionNotifications: true,
+  notificationContent: "Name, content, and actions",
+  pushNotificationSounds: false,
+  inChatMessageSounds: true,
+  includeMutedInBadge: false,
+  activeNotificationProfile: "All Notifications",
+
+  readReceipts: true,
+  typingIndicators: true,
+  defaultDisappearingTimer: "Off",
+  storiesEnabled: true,
+  sealedSenderIcon: false,
+  autoKeyVerification: true,
+  blockedUsers: [],
+  phonePrivacy: "everyone",
+
+  deviceName: "macOS",
+  openAtLogin: false,
+  micPermission: true,
+  camPermission: true,
+
+  autoDownloadPhotos: true,
+  autoDownloadVideo: true,
+  autoDownloadAudio: true,
+  autoDownloadDocs: true,
+  sentMediaQuality: "Standard",
+};
+
 interface SignalContextType {
   currentUser: User | null;
   seedUsers: UserBrief[];
@@ -14,6 +129,8 @@ interface SignalContextType {
   soundEnabled: boolean;
   setSoundEnabled: (val: boolean) => void;
   toggleTheme: () => void;
+  settings: AppSettings;
+  updateSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
   conversations: Conversation[];
   activeConversation: Conversation | null;
   messages: Message[];
@@ -47,6 +164,7 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isLoading, setIsLoading] = useState(true);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationIdState] = useState<string | null>(null);
@@ -63,36 +181,74 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Active conversation getter
   const activeConversation = conversations.find((c) => c.id === activeConversationId) || null;
 
-  // Initialize theme
+  // Load saved settings from localStorage on mount
   useEffect(() => {
-    const savedTheme = (localStorage.getItem("signal_theme") as "dark" | "light") || "dark";
-    setTheme(savedTheme);
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-
-    const savedSound = localStorage.getItem("signal_sound");
-    if (savedSound !== null) {
-      setSoundEnabled(savedSound === "true");
+    try {
+      const saved = localStorage.getItem("signal_settings");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setSettings((prev) => ({ ...prev, ...parsed }));
+      }
+    } catch (e) {
+      console.error("Failed to load settings:", e);
     }
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    localStorage.setItem("signal_theme", newTheme);
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+  const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+    setSettings((prev) => {
+      const next = { ...prev, [key]: value };
+      try {
+        localStorage.setItem("signal_settings", JSON.stringify(next));
+      } catch (e) {
+        console.error("Failed to save settings:", e);
+      }
+      return next;
+    });
+  }, []);
+
+  // Synchronize Theme & Zoom with settings
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      (document.documentElement.style as any).zoom = settings.zoomLevel || "100%";
     }
+
+    const applyTheme = () => {
+      const isDark =
+        settings.themeMode === "Dark" ||
+        (settings.themeMode === "System" &&
+          typeof window !== "undefined" &&
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+      if (isDark) {
+        document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
+        setTheme("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+        setTheme("light");
+      }
+    };
+
+    applyTheme();
+
+    if (settings.themeMode === "System" && typeof window !== "undefined" && window.matchMedia) {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const handler = () => applyTheme();
+      mq.addEventListener("change", handler);
+      return () => mq.removeEventListener("change", handler);
+    }
+  }, [settings.themeMode, settings.zoomLevel]);
+
+  const toggleTheme = () => {
+    const nextMode = theme === "dark" ? "Light" : "Dark";
+    updateSetting("themeMode", nextMode);
   };
 
   const handleSetSoundEnabled = (val: boolean) => {
     setSoundEnabled(val);
-    localStorage.setItem("signal_sound", String(val));
+    updateSetting("inChatMessageSounds", val);
   };
 
   // Initial Auth Check
@@ -504,6 +660,7 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Send typing notification
   const sendTyping = (isTyping: boolean) => {
+    if (!settings.typingIndicators) return;
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && activeConversationId) {
       wsRef.current.send(
         JSON.stringify({
@@ -524,6 +681,7 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       );
     } catch (e) {
       console.error("Error toggling reaction:", e);
+      throw e;
     }
   };
 
@@ -535,10 +693,11 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       refreshConversations();
     } catch (e) {
       console.error("Error deleting message:", e);
+      throw e;
     }
   };
 
-  // Select or create 1-on-1 direct chat with contact
+  // Select or start direct chat with user
   const selectOrStartDirectChat = async (contactUserId: string) => {
     try {
       const conv = await api.createDirectConversation(contactUserId);
@@ -546,10 +705,11 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setActiveConversationId(conv.id);
     } catch (e) {
       console.error("Error starting direct chat:", e);
+      throw e;
     }
   };
 
-  // Create group chat
+  // Create new group
   const createGroup = async (name: string, memberIds: string[], avatarUrl?: string) => {
     try {
       const conv = await api.createGroupConversation(name, memberIds, avatarUrl);
@@ -565,9 +725,9 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const addMemberToGroup = async (convId: string, userId: string) => {
     try {
       await api.addGroupMember(convId, userId);
-      await refreshConversations();
+      refreshConversations();
     } catch (e) {
-      console.error("Error adding group member:", e);
+      console.error("Error adding member:", e);
       throw e;
     }
   };
@@ -576,14 +736,14 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const removeMemberFromGroup = async (convId: string, userId: string) => {
     try {
       await api.removeGroupMember(convId, userId);
-      await refreshConversations();
+      refreshConversations();
     } catch (e) {
-      console.error("Error removing group member:", e);
+      console.error("Error removing member:", e);
       throw e;
     }
   };
 
-  // Update disappearing timer
+  // Update disappearing message timer
   const updateDisappearingTimer = async (convId: string, seconds: number) => {
     try {
       await api.updateDisappearing(convId, seconds);
@@ -591,7 +751,7 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         prev.map((c) => (c.id === convId ? { ...c, disappearing_seconds: seconds } : c))
       );
     } catch (e) {
-      console.error("Error updating disappearing messages:", e);
+      console.error("Error updating disappearing timer:", e);
       throw e;
     }
   };
@@ -651,6 +811,8 @@ export const SignalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         soundEnabled,
         setSoundEnabled: handleSetSoundEnabled,
         toggleTheme,
+        settings,
+        updateSetting,
         conversations,
         activeConversation,
         messages,
