@@ -221,7 +221,7 @@ export const EmojiStickerPicker: React.FC<EmojiStickerPickerProps> = ({
       <div className="absolute left-3 bottom-full mb-3 w-[336px] h-[430px] bg-[#28282c] border border-[#38383c]/70 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 select-none">
         {/* Top Segmented Controls (Matching Screenshot media_1788808987694.png) */}
         <div className="p-2.5 pb-1.5 flex items-center justify-center">
-          <div className="flex items-center gap-1 bg-[#1e1e20] p-1 rounded-full border border-[#323236]">
+          <div className="flex items-center gap-1 bg-[#111113] p-1 rounded-full border border-[#323236]">
             {(["emoji", "stickers", "gifs"] as PickerTab[]).map((tab) => {
               const label = tab === "emoji" ? "Emoji" : tab === "stickers" ? "Stickers" : "GIFs";
               const isActive = activeTab === tab;

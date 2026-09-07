@@ -332,7 +332,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   // ==========================================
   if (activeRailTab === "calls") {
     return (
-      <div className="flex-1 h-full bg-[#1e1e20] flex flex-col items-center justify-center text-center p-8 select-none">
+      <div className="flex-1 h-full bg-[#111113] flex flex-col items-center justify-center text-center p-8 select-none">
         <div
           onClick={onCreateCallLink}
           className="w-16 h-16 rounded-full flex items-center justify-center text-gray-500 hover:text-white cursor-pointer transition-transform hover:scale-105 mb-4"
@@ -351,14 +351,14 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   // ==========================================
   if (activeRailTab === "stories") {
     return (
-      <div className="flex-1 h-full bg-[#1e1e20] flex flex-col items-center justify-center text-center p-8 select-none">
+      <div className="flex-1 h-full bg-[#111113] flex flex-col items-center justify-center text-center p-8 select-none">
         <div
           onClick={onOpenAddStory}
           className="w-16 h-16 rounded-full flex items-center justify-center text-gray-500 hover:text-white cursor-pointer transition-transform hover:scale-105 mb-4"
         >
           <div className="relative w-8 h-8 flex items-center justify-center">
             <div className="w-6 h-8 rounded-sm border-2 border-current rotate-6 absolute -right-0.5 opacity-50" />
-            <div className="w-6 h-8 rounded-sm border-2 border-current -rotate-3 bg-[#1e1e20] relative z-10" />
+            <div className="w-6 h-8 rounded-sm border-2 border-current -rotate-3 bg-[#111113] relative z-10" />
           </div>
         </div>
         <p className="text-sm text-gray-400 max-w-xs leading-relaxed">
@@ -380,7 +380,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   // ==========================================
   if (!activeConversation) {
     return (
-      <div className="flex-1 h-full bg-[#1e1e20] flex flex-col items-center justify-center text-center p-8 select-none">
+      <div className="flex-1 h-full bg-[#111113] flex flex-col items-center justify-center text-center p-8 select-none">
         <div className="w-16 h-16 rounded-full bg-[#28282c] flex items-center justify-center text-signal-blue mb-4">
           <Lock className="w-8 h-8" />
         </div>
@@ -406,9 +406,9 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   const typers = typingUsers[activeConversation.id] || [];
 
   return (
-    <div className="flex-1 h-full bg-[#1e1e20] flex flex-col relative overflow-hidden select-none">
+    <div className="flex-1 h-full bg-[#111113] flex flex-col relative overflow-hidden select-none">
       {/* Top Header (Matching Screenshot 1) */}
-      <header className="h-14 px-4 bg-[#1e1e20] border-b border-[#28282c] flex items-center justify-between z-10">
+      <header className="h-14 px-4 bg-[#111113] border-b border-[#28282c] flex items-center justify-between z-10">
         <div className="flex items-center gap-3 min-w-0">
           {/* Avatar */}
           {isNoteToSelf ? (
@@ -719,7 +719,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
         {isNoteToSelf && (
           <div className="relative mt-12 mb-6 pt-11 pb-7 px-8 rounded-[30px] bg-[#222225] border border-[#2e2e34] max-w-sm mx-auto text-center flex flex-col items-center shadow-lg">
             {/* Overhanging Icon Circle */}
-            <div className="absolute -top-9 left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full bg-[#cfd2d8] flex items-center justify-center border-4 border-[#1e1e20] shadow-sm">
+            <div className="absolute -top-9 left-1/2 -translate-x-1/2 w-[72px] h-[72px] rounded-full bg-[#cfd2d8] flex items-center justify-center border-4 border-[#111113] shadow-sm">
               <svg
                 width="34"
                 height="38"
@@ -961,7 +961,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
       </div>
 
       {/* Bottom Message Input Bar (Matching Screenshot media_1788808987693.png & media_1788808987694.png) */}
-      <footer className="p-3.5 bg-[#1e1e20] relative">
+      <footer className="p-3.5 bg-[#111113] relative">
         {/* Reply preview banner */}
         {replyingTo && (
           <div className="mb-2 p-2.5 rounded-2xl bg-[#28282c] border-l-4 border-signal-blue flex items-center justify-between shadow-md">

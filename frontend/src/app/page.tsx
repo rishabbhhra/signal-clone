@@ -85,7 +85,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#1b1b1f] text-white">
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#111113] text-white">
         <div className="w-16 h-16 rounded-2xl bg-signal-blue flex items-center justify-center animate-pulse mb-4 shadow-lg shadow-blue-500/30">
           <Lock className="w-8 h-8" />
         </div>
@@ -123,7 +123,7 @@ export default function Home() {
   const unreadCount = conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0);
 
   return (
-    <main className="h-screen w-screen flex overflow-hidden bg-[#1b1b1f] text-white font-sans select-none">
+    <main className="h-screen w-screen flex overflow-hidden bg-[#111113] text-white font-sans select-none">
       {/* 1. Far-Left Activity Rail (56px) */}
       <ActivityRail
         activeTab={activeRailTab}
