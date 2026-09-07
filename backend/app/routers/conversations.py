@@ -69,6 +69,15 @@ async def format_conversation_out(
             if conv.type == "direct" and u.id != current_user_id:
                 direct_recipient = u_brief
 
+    if conv.type == "note_to_self":
+        direct_recipient = UserBrief(
+            id=current_user_id,
+            username="note_to_self",
+            display_name="Note to Self",
+            avatar_url=None,
+            is_online=True,
+        )
+
     # Find last message
     msg_query = (
         select(Message)
@@ -169,6 +178,44 @@ async def list_conversations(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Ensure Note to Self conversation exists for current user
+    note_conv_res = await db.execute(
+        select(Conversation)
+        .join(ConversationParticipant)
+        .where(
+            Conversation.type == "note_to_self",
+            ConversationParticipant.user_id == current_user.id,
+        )
+    )
+    note_conv = note_conv_res.scalars().first()
+    if not note_conv:
+        note_conv = Conversation(
+            id=f"conv-note-{current_user.id}",
+            type="note_to_self",
+            name="Note to Self",
+            created_by=current_user.id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(note_conv)
+        await db.flush()
+        part = ConversationParticipant(
+            conversation_id=note_conv.id,
+            user_id=current_user.id,
+            role="admin",
+        )
+        db.add(part)
+        welcome_note = Message(
+            conversation_id=note_conv.id,
+            sender_id=current_user.id,
+            content="hi",
+            message_type="text",
+            status="read",
+            created_at=datetime.utcnow(),
+        )
+        db.add(welcome_note)
+        await db.commit()
+
     # Find all conversations where current_user is participant
     query = (
         select(Conversation)

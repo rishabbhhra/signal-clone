@@ -180,12 +180,13 @@ async def send_message(
     )
     recipient_ids = [uid for uid, in all_parts.all()]
 
-    initial_status = "sent"
-    # Check if any recipient is viewing conversation -> read!
     any_viewing = any(ws_manager.is_user_viewing_conversation(rid, conv_id) for rid in recipient_ids)
     any_online = any(ws_manager.is_user_online(rid) for rid in recipient_ids)
 
-    if any_viewing:
+    initial_status = "sent"
+    if conv.type == "note_to_self":
+        initial_status = "read"
+    elif any_viewing:
         initial_status = "read"
     elif any_online:
         initial_status = "delivered"

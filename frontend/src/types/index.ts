@@ -69,7 +69,7 @@ export interface ConversationParticipant {
 
 export interface Conversation {
   id: string;
-  type: "direct" | "group";
+  type: "direct" | "group" | "note_to_self";
   name?: string | null;
   avatar_url?: string | null;
   created_by?: string | null;

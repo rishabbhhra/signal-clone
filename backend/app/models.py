@@ -152,3 +152,32 @@ class MessageReaction(Base):
 
     message = relationship("Message", back_populates="reactions")
     user = relationship("User", lazy="selectin")
+
+
+class Call(Base):
+    __tablename__ = "calls"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    caller_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    receiver_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    call_type = Column(String(16), default="audio")  # "audio" | "video"
+    status = Column(String(16), default="completed")  # "missed", "incoming", "outgoing", "completed"
+    duration_seconds = Column(Integer, default=0)
+    call_link = Column(String(128), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    caller = relationship("User", foreign_keys=[caller_id], lazy="selectin")
+    receiver = relationship("User", foreign_keys=[receiver_id], lazy="selectin")
+
+
+class Story(Base):
+    __tablename__ = "stories"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content = Column(Text, nullable=True)
+    media_url = Column(String(512), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id], lazy="selectin")

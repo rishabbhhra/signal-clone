@@ -12,7 +12,7 @@ from app.database import engine, Base, AsyncSessionLocal
 from app.models import User, ConversationParticipant
 from app.websocket_manager import ws_manager
 from app.seed import seed_database
-from app.routers import auth, users, contacts, conversations, messages, upload
+from app.routers import auth, users, contacts, conversations, messages, upload, calls, stories
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("signal_clone")
@@ -60,6 +60,8 @@ app.include_router(contacts.router)
 app.include_router(conversations.router)
 app.include_router(messages.router)
 app.include_router(upload.router)
+app.include_router(calls.router)
+app.include_router(stories.router)
 
 
 @app.get("/api/health")
