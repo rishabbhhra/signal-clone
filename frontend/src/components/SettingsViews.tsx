@@ -300,12 +300,120 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
   };
 
   return (
-    <div className="flex-1 h-full bg-[#1e1e20] overflow-y-auto select-none relative">
+    <div className="flex-1 h-full bg-[#1b1b1f] overflow-y-auto select-none relative">
       {/* Toast Feedback Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-8 z-50 bg-[#222228] text-white text-xs px-4 py-2.5 rounded-xl shadow-2xl border border-[#383842] flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* =========================================================================
+          VIEW: GENERAL
+      ========================================================================= */}
+      {activeSection === "general" && (
+        <div className="max-w-2xl mx-auto w-full py-10 px-6 space-y-6 animate-in fade-in duration-150">
+          <h2 className="text-center text-zinc-100 font-semibold text-sm tracking-wide">General</h2>
+
+          {/* Phone + Device */}
+          <div className="bg-[#252528] rounded-2xl divide-y divide-[#2e2e34]">
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs font-normal text-zinc-200">Phone Number</span>
+              <span className="text-xs text-zinc-400">
+                {currentUser?.phone_number ? `+91 ${currentUser.phone_number}` : "+91 62041 65936"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs font-normal text-zinc-200">Device Name</span>
+              <span className="text-xs text-zinc-400">macOS</span>
+            </div>
+          </div>
+          <p className="text-[11px] text-zinc-500 -mt-4 px-1 leading-relaxed">
+            To change the name of this device, open Signal on your phone and navigate to Settings &gt; Linked devices
+          </p>
+
+          {/* System */}
+          <div>
+            <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">System</h3>
+            <div className="bg-[#252528] rounded-2xl px-4 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-normal text-zinc-200">Open at computer login</span>
+                <SignalSwitch
+                  checked={(settings as any).openAtLogin ?? false}
+                  onChange={(val) => {
+                    updateSetting("openAtLogin" as any, val);
+                    showToast(val ? "Will open at login" : "Won't open at login");
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Permissions */}
+          <div>
+            <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Permissions</h3>
+            <div className="bg-[#252528] rounded-2xl divide-y divide-[#2e2e34]">
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-xs font-normal text-zinc-200">Allow access to the microphone</span>
+                <SignalSwitch
+                  checked={(settings as any).microphoneAccess ?? false}
+                  onChange={(val) => {
+                    updateSetting("microphoneAccess" as any, val);
+                    showToast(val ? "Microphone access granted" : "Microphone access revoked");
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-xs font-normal text-zinc-200">Allow access to the camera</span>
+                <SignalSwitch
+                  checked={(settings as any).cameraAccess ?? false}
+                  onChange={(val) => {
+                    updateSetting("cameraAccess" as any, val);
+                    showToast(val ? "Camera access granted" : "Camera access revoked");
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Updates */}
+          <div>
+            <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Updates</h3>
+            <div className="bg-[#252528] rounded-2xl px-4 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-normal text-zinc-200">Automatically download updates</span>
+                <SignalSwitch
+                  checked={(settings as any).autoDownloadUpdates ?? true}
+                  onChange={(val) => {
+                    updateSetting("autoDownloadUpdates" as any, val);
+                    showToast(val ? "Auto-update enabled" : "Auto-update disabled");
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Delete application data */}
+          <div className="bg-[#252528] rounded-2xl px-4 py-3 flex items-center justify-between">
+            <div className="pr-4">
+              <h4 className="text-xs font-normal text-zinc-200">Delete application data</h4>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                This will delete all data in the application, removing all messages and saved account information.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (window.confirm("Are you sure? This will delete all messages and account data.")) {
+                  localStorage.clear();
+                  showToast("Application data deleted. Please refresh.");
+                }
+              }}
+              className="px-4 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs font-medium transition-colors flex-shrink-0 border border-red-600/30 whitespace-nowrap"
+            >
+              Delete data
+            </button>
+          </div>
         </div>
       )}
 
@@ -317,7 +425,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           <h2 className="text-center text-zinc-100 font-semibold text-sm tracking-wide">Chats</h2>
 
           {/* Card 1: Address Book Photos & Muted Chats */}
-          <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+          <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
             <div className="flex items-center justify-between pb-3">
               <div className="pr-4">
                 <h4 className="text-xs font-normal text-zinc-200">Use address book photos</h4>
@@ -350,7 +458,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: Text input */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Text input</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+            <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
               <div className="flex items-center justify-between pb-3">
                 <span className="text-xs font-normal text-zinc-200">Spell check text entered in message composition box</span>
                 <SignalSwitch
@@ -430,7 +538,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Chat folders</h3>
             <div
               onClick={() => setIsChatFoldersOpen(true)}
-              className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between hover:bg-[#232328] transition-colors cursor-pointer"
+              className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between hover:bg-[#2d2d31] transition-colors cursor-pointer"
             >
               <div>
                 <h4 className="text-xs font-normal text-zinc-200">
@@ -447,7 +555,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           </div>
 
           {/* Card 4: Export chat history */}
-          <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between">
+          <div className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between">
             <div className="pr-4">
               <h4 className="text-xs font-normal text-zinc-200">Export chat history</h4>
               <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -464,7 +572,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           </div>
 
           {/* Card 5: Import contacts */}
-          <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between">
+          <div className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between">
             <div className="pr-4">
               <h4 className="text-xs font-normal text-zinc-200">Import contacts</h4>
               <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -490,7 +598,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           <h2 className="text-center text-zinc-100 font-semibold text-sm tracking-wide">Calls</h2>
 
           {/* Card 1: Enable Calls & Calling Sounds */}
-          <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+          <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
             <div className="flex items-center justify-between pb-3">
               <span className="text-xs font-normal text-zinc-200">Enable incoming calls</span>
               <SignalSwitch
@@ -516,7 +624,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: Devices */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Devices</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+            <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
               <div className="flex items-center justify-between pb-3">
                 <span className="text-xs font-normal text-zinc-200">Video</span>
                 <SignalSelect
@@ -570,7 +678,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: Advanced */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Advanced</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4">
+            <div className="bg-[#252528] rounded-2xl p-4">
               <div className="flex items-center justify-between">
                 <div className="pr-4">
                   <h4 className="text-xs font-normal text-zinc-200">Always relay calls</h4>
@@ -599,7 +707,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           <h2 className="text-center text-zinc-100 font-semibold text-sm tracking-wide">Notifications</h2>
 
           {/* Card 1: Main Notification Toggles */}
-          <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+          <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
             <div className="flex items-center justify-between pb-3">
               <span className="text-xs font-normal text-zinc-200">Enable notifications</span>
               <SignalSwitch
@@ -656,7 +764,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: Sounds */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Sounds</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+            <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
               <div className="flex items-center justify-between pb-3">
                 <span className="text-xs font-normal text-zinc-200">Push notification sounds</span>
                 <SignalSwitch
@@ -687,7 +795,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: App badge */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">App badge</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4">
+            <div className="bg-[#252528] rounded-2xl p-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-normal text-zinc-200">Include muted chats in badge count</span>
                 <SignalSwitch
@@ -704,7 +812,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Card 4: Notification profiles */}
           <div
             onClick={() => setIsNotificationProfilesOpen(true)}
-            className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between hover:bg-[#232328] transition-colors cursor-pointer"
+            className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between hover:bg-[#2d2d31] transition-colors cursor-pointer"
           >
             <div>
               <h4 className="text-xs font-normal text-zinc-200">Notification profiles</h4>
@@ -727,7 +835,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Card 1: Phone Number */}
           <div
             onClick={() => setIsPhonePrivacyOpen(true)}
-            className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between hover:bg-[#232328] transition-colors cursor-pointer"
+            className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between hover:bg-[#2d2d31] transition-colors cursor-pointer"
           >
             <div>
               <h4 className="text-xs font-normal text-zinc-200">Phone Number</h4>
@@ -741,7 +849,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Card 2: Blocked */}
           <div
             onClick={() => setIsBlockedOpen(true)}
-            className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between hover:bg-[#232328] transition-colors cursor-pointer"
+            className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between hover:bg-[#2d2d31] transition-colors cursor-pointer"
           >
             <div>
               <h4 className="text-xs font-normal text-zinc-200">Blocked</h4>
@@ -757,7 +865,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: Messaging */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Messaging</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+            <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
               <div className="flex items-center justify-between pb-3">
                 <span className="text-xs font-normal text-zinc-200">Read receipts</span>
                 <SignalSwitch
@@ -788,7 +896,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: Disappearing messages */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Disappearing messages</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between">
+            <div className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between">
               <div className="pr-4">
                 <h4 className="text-xs font-normal text-zinc-200">Default timer for new chats</h4>
                 <p className="text-[11px] text-zinc-400 mt-0.5">Set a default disappearing message timer for all new chats started by you.</p>
@@ -816,7 +924,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: Stories */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Stories</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between">
+            <div className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between">
               <div className="pr-4">
                 <h4 className="text-xs font-normal text-zinc-200">Share &amp; View Stories</h4>
                 <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -845,7 +953,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           {/* Section: Advanced */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Advanced</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+            <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
               <div className="flex items-center justify-between pb-3">
                 <div className="pr-4">
                   <h4 className="text-xs font-normal text-zinc-200 flex items-center gap-1.5">
@@ -890,7 +998,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           <h2 className="text-center text-zinc-100 font-semibold text-sm tracking-wide">Appearance</h2>
 
           {/* Main Card: Language, Theme, Chat color, Zoom level */}
-          <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+          <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
             {/* Language */}
             <div
               onClick={() => setIsLanguageOpen(true)}
@@ -1096,7 +1204,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           <h2 className="text-center text-white font-semibold text-sm tracking-wide">General</h2>
 
           {/* Card 1: Phone & Device */}
-          <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] space-y-3">
+          <div className="p-4 rounded-2xl bg-[#252528] border border-[#27272c] space-y-3">
             <div className="flex justify-between items-center text-xs">
               <span className="text-gray-300 font-medium">Phone Number</span>
               <span className="text-gray-400 font-mono">{currentUser?.phone_number || "062041 65936"}</span>
@@ -1119,13 +1227,13 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
                 </button>
               </div>
             </div>
-            <p className="text-[11px] text-gray-500 pt-1 leading-relaxed border-t border-[#28282e]">
+            <p className="text-[11px] text-gray-500 pt-1 leading-relaxed border-t border-[#2e2e34]">
               To change the name of this device, open Signal on your phone and navigate to Settings &gt; Linked devices
             </p>
           </div>
 
           {/* Card 2: System */}
-          <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] space-y-2">
+          <div className="p-4 rounded-2xl bg-[#252528] border border-[#27272c] space-y-2">
             <h4 className="text-xs font-semibold text-gray-300">System</h4>
             <div className="flex items-center justify-between pt-1">
               <span className="text-xs text-gray-300">Open at computer login</span>
@@ -1140,7 +1248,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           </div>
 
           {/* Card 3: Permissions */}
-          <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] space-y-3">
+          <div className="p-4 rounded-2xl bg-[#252528] border border-[#27272c] space-y-3">
             <h4 className="text-xs font-semibold text-gray-300">Permissions</h4>
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-300">Allow access to the microphone</span>
@@ -1168,13 +1276,13 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
                 }}
               />
             </div>
-            <p className="text-[11px] text-gray-500 pt-1 border-t border-[#28282e]">
+            <p className="text-[11px] text-gray-500 pt-1 border-t border-[#2e2e34]">
               Give this app permission to access your microphone and camera to make calls.
             </p>
           </div>
 
           {/* Card 4: Updates */}
-          <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-[#252528] border border-[#27272c] flex items-center justify-between">
             <div>
               <h4 className="text-xs font-semibold text-gray-300">Version 7.42.0</h4>
               <p className="text-[11px] text-gray-500">Signal is up to date</p>
@@ -1190,7 +1298,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
           </div>
 
           {/* Card 5: Delete data */}
-          <div className="p-4 rounded-2xl bg-[#1e1e22] border border-[#27272c] flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-[#252528] border border-[#27272c] flex items-center justify-between">
             <div className="pr-4">
               <h4 className="text-xs font-semibold text-gray-300">Delete application data</h4>
               <p className="text-[11px] text-gray-500 mt-0.5">
@@ -1216,7 +1324,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
 
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Media auto-download</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 divide-y divide-[#28282e]">
+            <div className="bg-[#252528] rounded-2xl p-4 divide-y divide-[#2e2e34]">
               <div className="flex items-center justify-between pb-3">
                 <span className="text-xs font-normal text-zinc-200">Photos</span>
                 <SignalSwitch
@@ -1263,7 +1371,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
             </p>
           </div>
 
-          <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between">
+          <div className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between">
             <div className="pr-4">
               <h4 className="text-xs font-normal text-zinc-200">Sent media quality</h4>
               <p className="text-[11px] text-zinc-400 mt-0.5">Sending high quality media will use more data.</p>
@@ -1293,7 +1401,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
             Back up your message history so you never lose data when you get a new phone or reinstall Signal.
           </p>
 
-          <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-start gap-3.5">
+          <div className="bg-[#252528] rounded-2xl p-4 flex items-start gap-3.5">
             <Clock className="w-5 h-5 text-zinc-400 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="text-xs font-normal text-zinc-200">Signal Secure Backups</h4>
@@ -1306,7 +1414,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
 
           <div>
             <h3 className="text-xs font-semibold text-zinc-400 mb-2 px-1">Other ways to back up</h3>
-            <div className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between">
+            <div className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between">
               <div className="flex items-start gap-3.5 pr-4">
                 <Folder className="w-5 h-5 text-zinc-400 flex-shrink-0 mt-0.5" />
                 <div>
@@ -1360,7 +1468,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
 
           <div
             onClick={() => window.open("https://support.signal.org/hc/en-us/articles/360031955551-Donor-FAQs", "_blank")}
-            className="bg-[#1e1e22] rounded-2xl p-4 flex items-center justify-between hover:bg-[#232328] transition-colors cursor-pointer text-left"
+            className="bg-[#252528] rounded-2xl p-4 flex items-center justify-between hover:bg-[#2d2d31] transition-colors cursor-pointer text-left"
           >
             <div className="flex items-center gap-3 text-xs text-zinc-200">
               <HelpCircle className="w-4 h-4 text-zinc-400 flex-shrink-0" />
@@ -1382,7 +1490,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       {/* 1. Chat Folders Modal */}
       {isChatFoldersOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#1e1e22] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
+          <div className="w-full max-w-md bg-[#252528] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Chat folders</h3>
               <button
@@ -1466,7 +1574,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       {/* 2. Blocked Users Modal */}
       {isBlockedOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#1e1e22] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
+          <div className="w-full max-w-md bg-[#252528] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Blocked contacts</h3>
               <button
@@ -1550,7 +1658,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       {/* 3. Phone Number Privacy Modal */}
       {isPhonePrivacyOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#1e1e22] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
+          <div className="w-full max-w-md bg-[#252528] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Phone number privacy</h3>
               <button
@@ -1599,7 +1707,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       {/* 4. Language Selector Modal */}
       {isLanguageOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#1e1e22] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
+          <div className="w-full max-w-md bg-[#252528] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Choose language</h3>
               <button
@@ -1637,7 +1745,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       {/* 5. Notification Profiles Modal */}
       {isNotificationProfilesOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#1e1e22] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
+          <div className="w-full max-w-md bg-[#252528] border border-[#2e2e36] rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Notification profiles</h3>
               <button
@@ -1691,7 +1799,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       {/* 6. Desktop Backup Setup Wizard Modal */}
       {isBackupModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-[#1e1e22] border border-[#2e2e36] rounded-2xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-100">
+          <div className="w-full max-w-lg bg-[#252528] border border-[#2e2e36] rounded-2xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <HardDrive className="w-5 h-5 text-signal-blue" />
@@ -1780,7 +1888,7 @@ export const SettingsViews: React.FC<SettingsViewsProps> = ({ activeSection }) =
       {/* 7. Delete Data Confirmation Modal */}
       {isDeleteDataOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#1e1e22] border border-[#2e2e36] rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
+          <div className="w-full max-w-md bg-[#252528] border border-[#2e2e36] rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center gap-3 text-red-400">
               <Trash2 className="w-6 h-6" />
               <h3 className="text-base font-bold text-white">Delete application data?</h3>

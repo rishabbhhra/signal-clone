@@ -142,7 +142,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
   }, [conversations, searchQuery]);
 
   return (
-    <div className="w-80 lg:w-[340px] h-full bg-[#242426] border-r border-[#2c2c30] flex flex-col select-none flex-shrink-0 z-20">
+    <div className="w-80 lg:w-[340px] h-full bg-[#1f1f23] border-r border-[#2c2c30] flex flex-col select-none flex-shrink-0 z-20">
       {/* 1. CHATS TAB - NEW CHAT VIEW (Screenshot 5: media_1788800001867.png) */}
       {activeRailTab === "chats" && isNewChatMode && (
         <>
@@ -629,7 +629,7 @@ export const SubSidebar: React.FC<SubSidebarProps> = ({
               className={`p-3 rounded-2xl cursor-pointer transition-all flex items-center gap-3.5 ${
                 activeSettingsSection === "profile"
                   ? "bg-[#323236] text-white shadow-xs ring-1 ring-white/10"
-                  : "bg-[#2c2c30]/80 text-gray-200 hover:bg-[#323236]"
+                  : "bg-[#2a2a2e] text-gray-200 hover:bg-[#323236]"
               }`}
             >
               <div className="w-11 h-11 rounded-full bg-[#cfd2d8] text-[#1c1c20] flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-xs">
